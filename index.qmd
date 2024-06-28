@@ -1,0 +1,872 @@
+---
+title: "Diffusion Models Note"
+format:
+  arxiv-pdf:
+    include-before-body:
+      text: |
+        \renewcommand{\Return}{\State \textbf{return}~}
+        \newcommand{\Print}{\State \textbf{print}~}
+        \newcommand{\Break}{\State \textbf{break}}
+        \newcommand{\Continue}{\State \textbf{continue}}
+        \newcommand{\True}{\textbf{true}}
+        \newcommand{\False}{\textbf{false}}
+        \renewcommand{\And}{\textbf{and}~}
+        \newcommand{\Or}{\textbf{or}~}
+        \renewcommand{\Not}{\textbf{not}~}
+        \newcommand{\To}{\textbf{to}~}
+        \newcommand{\DownTo}{\textbf{downto}~}
+    pdf-engine: xelatex
+    keep-tex: true  
+    linenumbers: false
+    doublespacing: false
+    runninghead: "A Preprint"
+  arxiv-html:
+    html-math-method: katex
+author:
+  - name: ChoCho
+    affiliations:
+      - name: National Central University
+        department: Mathematics
+        address: No. 300, Zhongda Rd., Zhongli District
+        city: Taoyuan City 320317
+        country: Taiwan (R.O.C.)
+        # postal-code: 13210
+    # orcid: 0000-0003-2402-304X
+    email: kycho@math.ncu.edu.tw
+    url: https://github.com/ChoCho66/
+  # - name: Garbage
+    
+abstract: |
+  The purpose of this survey is to introduce the diffusion model. We will first introduce the basic concepts of DDPM, and then introduce some developments based on DDPM, including DDIM and the condition diffusion model. We will be writing using symbols customary to the mathematics department.
+keywords: 
+  - Diffusion Models
+bibliography: references.bib
+filters:
+  # - acronyms  
+  - pseudocode
+# acronyms:
+#   keys:
+#   - shortname: DDPM
+#     longname: Denoising Diffusion Probabilistic Models
+#   - shortname: DDIM
+#     longname: Denoising Diffusion Implicit Models
+#   loa_title: "Glossary"
+#   insert_loa: "end"
+#   sorting: alphabetical
+#   style: "short-long"
+---
+
+
+
+# Introduction
+
+**Diffusion Probabilistic Models (DPM, or Diffusion Models)** were first proposed by @pmlr-v37-sohl-dickstein15. 
+We will focus on the DDPM (Denoising Diffusion Probabilistic Models) (@ho2020denoising).
+We will also introduce some developments based on DDPM: including DDIM (Denoising Diffusion Implicit Models) (@sec-DDIM) and the condition diffusion model (@sec-cdm).
+
+The history of generative AI is rich and multifaceted, dating back several decades.
+Initially, generative models were relatively simplistic, but advancements over time have led to the development of more sophisticated techniques.
+One of the earliest breakthroughs in this field was the introduction of the Variational Autoencoder (VAE) (@kingma2022autoencoding).
+VAEs employ a probabilistic approach to model the distribution of data, allowing for the generation of new, similar data points by sampling from this distribution.
+Following VAEs, Generative Adversarial Networks (GANs) (@goodfellow2014generative) revolutionized generative AI by using a game-theoretic approach, where two neural networks—the generator and the discriminator—compete in a zero-sum game, resulting in the creation of highly realistic data.
+
+Diffusion models are a newer addition to this landscape and have shown remarkable promise.
+These models work by simulating the diffusion process, wherein data points are progressively transformed from a simple distribution (like Gaussian noise) to a complex data distribution.
+Notable types of diffusion models include Denoising Diffusion Probabilistic Models (DDPMs) and Noise-Conditional Score Networks (NCSNs).
+DDPMs iteratively refine noisy data points until they resemble the target distribution, whereas NCSNs use score matching to model the gradient of the data distribution, which guides the generation process.
+
+Recent developments in diffusion models have focused on enhancing their efficiency and quality.
+Innovations such as improved noise scheduling, hybrid architectures combining features from VAEs and GANs, and advancements in training techniques have all contributed to the rapid evolution of diffusion models.
+These advancements have enabled diffusion models to generate data with unprecedented fidelity and have opened new avenues for their application across various domains, including image synthesis, natural language processing, and beyond.
+
+In summary, diffusion models have emerged as a powerful tool within the generative AI toolkit.
+Their ongoing development promises to further push the boundaries of what is possible in data generation, offering exciting possibilities for both research and practical applications.
+
+Next, we introduce the basic concepts of DDPM.
+
+# Background
+
+The diffusion model consists of two main parts:
+
+1. **Adding Noise (Forward Process):** We gradually introduce independent noise to the starting image until it becomes pure noise.
+2. **Denoising (Backward Process):** Beginning with pure noise, we use the current image to estimate what the previous image looked like. Repeating this process step by step, the final output image is our generated picture.
+
+TODO: 補圖
+
+We use mathematical formulas to describe the above statement.
+Given $T\in \mathbb N.$
+Fix constants $\alpha_t,\beta_t\in (0.001,0.999)$ for $t=1,2,\cdots,T$ such that $\alpha_t+\beta_t=1.$
+We set the following random vectors of $\mathbb R^n$
+(note that here we only have random vectors and not probability measures):
+
+- $X_0$: The initial image.
+- $\mathcal{E}_t,\, t=1,2,\cdots,T$: The noise added in step $t$.
+- $X_t = \sqrt{\alpha_{t}}X_{t-1} + \sqrt{\beta_t}\mathcal{E}_t,\, t=1,2,\cdots,T$: The image in step $t.$ 
+
+To have the concepts of **independence** and **noise**, 
+we need to have probability measures.
+In the following text, we use lowercase $q(x)$ to denote the density of a probability measure $\mathbf{Q}$ corresponding to the random variable $X.$
+Others (e.g., $q(x_t),p_{\theta}(x_t)$) are the same
+($p_{\theta}$ corresponds to $\mathbf{P}_{\theta}$).
+We also use $q(x_{0:t})$ to denote the density of $(X_0,X_1,\cdots,X_t):=X_{0:t}$ for the probability measure $\mathbf{Q}.$
+Others are the same.
+
+Suppose $q_{\text{want}}(x_0)$ is the density of $X_0$ we want to pursue.
+We do not know what $q_{\text{want}}(x_0)$ is.
+We only have some eligible images (discrete data) with mass function ${\color{blue}{q(x_0)}}.$
+When this discrete data large, $q(x_0)\approx q_{\text{want}}(x_0)$ in some sense of distribution.
+**Our goal** is to find a density $p(x_0)$ of $X_0$ such that $p(x_0)\approx q_{\text{want}}(x_0)$ in some sense of distribution.
+
+## Forward process
+
+TODO: Notation
+
+In the forward process, 
+we add noise independently to the image.
+Note that adding noise independently is equivalent to the Markov property (see @sec-markov-equivalent).
+We define the **forward process** $\bigl( \lbrace X_0,\cdots,X_T\rbrace,\mathbf{Q} \bigr)$ as a Markov chain with 
+
+- the initial density $q(x_0),$ and
+- the transition density
+  $$
+  \begin{aligned}
+    q(x_t\vert x_{t-1}) = \mathcal{N} (\sqrt{\alpha_t}x_{t-1},\beta_t \mathbf{I}).
+  \end{aligned}
+  $$
+
+By the Markov property, the joint density of $(X_T, X_{T-1},\cdots, X_1, X_0)$ for the forward process
+(or we say under $\mathbf{Q}$) is
+$$
+\begin{aligned}
+  q(x_{T:0}) = q(x_T\vert x_{T-1}) \cdot q(x_{T-1}\vert x_{T-2}) \cdots q(x_{1}\vert x_0) \cdot q(x_0).
+\end{aligned}
+$$
+Recall that $X_t = \sqrt{\alpha_{t}}X_{t-1} + \sqrt{\beta_t}\mathcal{E}_t.$
+Then under $\mathbf{Q},$ 
+$\underline{\mathcal{E}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})}$ and
+$$
+\begin{aligned}
+  \underline{X_0,\mathcal{E}_1,\mathcal{E}_2,\cdots,\mathcal{E}_t\text{ are independent}}
+\end{aligned}
+$$
+(see TODO: appendix).
+Define a random vector $\overline{\mathcal{E}}_t$ by
+$$
+\begin{aligned}
+  X_t = \sqrt{\overline{\alpha}_t}X_0 + \sqrt{1-\overline{\alpha}_t} \cdot \overline{\mathcal{E}}_t,
+\end{aligned}
+$$ {#eq-Xt-X0-Et}
+where $\overline{\alpha}_t = \alpha_t\cdot \alpha_{t-1}\cdots \alpha_1.$
+Then under $\mathbf{Q},$
+$\underline{\overline{\mathcal{E}}_t\perp X_0}$ and $\underline{\overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})}.$
+This implies that $X_T$ converges in distribution to $\mathcal{N}(\mathbf{0},\mathbf{I})$ under $\mathbf{Q}$ for $T$ large.
+
+@eq-Xt-X0-Et is a important relation between $X_t$ and $X_0$ and the noise $\overline{\mathcal{E}}_t.$
+For example, if we have an estimator of $\overline{\mathcal{E}}_t,$ say $\widehat{\overline{\mathcal{E}_t}},$ 
+then by this relationship, we have an estimator $\widehat{X}_0 = \widehat{X}_0\Bigl(X_t,\widehat{\overline{\mathcal{E}_t}}\Bigr)$ of $X_0$ satisfies the following:
+$$
+\begin{aligned}
+  X_t = \sqrt{\overline{\alpha}_t} \widehat{X}_0 + \sqrt{1-\overline{\alpha}_t} \cdot \widehat{\overline{\mathcal{E}_t}}.
+\end{aligned}
+$$ {#eq-estimator-X0}
+We will use this relationship when we reparameterize our model.
+
+
+
+
+## Backward process
+In the backward process, 
+we remove the noise according to the current image.
+This can also be described by the Markov chain.
+Ideally we define the **backward process** $\bigl( \lbrace X_T,X_{T-1},\cdots,X_1,X_0 \rbrace, \mathbf{P} \bigr)$ as a Markov chain with the initial distribution $p(x_T) = \mathcal{N}(\mathbf{0},\mathbf{I})$ and the transition density $p(x_{t-1}\vert x_t)=q(x_{t-1}\vert x_t).$
+In this assumption, we have $p(x_0)\approx q(x_0)$ in some sense of distribution (see TODO: appendix).
+We may sample $x_0\sim p(x_0)$ by the following:
+
+- Sample $x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I}).$
+- Sample $x_{t-1}\sim q(x_{t-1}\vert x_t)$ inductively for $t=T,T-1,\cdots,1.$
+
+However, there is a problem with the sampling above.
+Although from the properties of conditional density, we have
+$$
+\begin{aligned}
+  q(x_{t-1}\vert x_t) = \frac{q(x_{t-1})}{q(x_t)} \cdot q(x_t\vert x_{t-1}).
+\end{aligned}
+$$
+It's not easy to use this formula to sample $x_{t-1}\sim q(x_{t-1}\vert x_t)$ through code since the expression of $q(x_{t-1})/q(x_t)$ may be complicated.
+The way to solve this problem is that we assume there is another probability measure $\mathbf{P}_{\theta}$
+(this is our model, which can be sampled through code).
+There are several methods (SDE or just Taylor's theory, see TODO: appendix) to show that we can approximate $q(x_{t-1}\vert x_t)$ with a normal.
+Hence, we construct $\mathbf{P}_{\theta}$ such that 
+$$
+\begin{aligned}
+  p_{\theta}(x_{t-1}\vert x_t) = \mathcal{N}\bigl(x_{t-1}; \mu_{\theta}(x_t,t),\Sigma_{\theta}(x_t,t)\bigr),
+\end{aligned}
+$$
+where $\mu_{\theta},\, \Sigma_{\theta}$ is what we need to give.
+A way to construct $\mathbf{P}_{\theta}$ is that we consider $\bigl( \lbrace X_T,X_{T-1},\cdots, X_1,X_0\rbrace,\mathbf{P}_{\theta} \bigr)$ is a Markov chain with
+
+  - the initial density $p_{\theta}(x_T) = \mathcal{N}(\mathbf{0},\mathbf{I})$ and 
+  - the transition density
+    $$
+    \begin{aligned}
+      \color{blue}{p_{\theta}(x_{t-1}\vert x_t) = \mathcal{N}\bigl(x_{t-1}; \mu_{\theta}(x_t,t),\Sigma_{\theta}(x_t,t)\bigr).}
+    \end{aligned}
+    $$
+
+The joint density of $X_{0:T}$ (under $\mathbf{P}_{\theta}$) is, by the Markov property,
+$$
+\begin{aligned}
+  p_{\theta}(x_{0:T}) = p_{\theta}(x_0 \vert x_1) \cdot p_{\theta}(x_1\vert x_2) \cdots p_{\theta}(x_{T-1}\vert x_T) \cdot p(x_T).
+\end{aligned}
+$$
+We can sample $x_0\sim p_{\theta}(x_0)$ by the following:
+
+- Sample $x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I}).$
+- Sample $x_{t-1}\sim p_{\theta}(x_{t-1}\vert x_t)$ inductively for $t=T,T-1,\cdots,1.$
+
+Now **our goal** becomes to optimize $\theta$ such that $p_{\theta}(x_0)\approx q(x_0)$ in some sense.
+A common way to measure the difference between $p_{\theta}(x_0)$ and $q(x_0)$ is the [KL-divergence](https://en.wikipedia.org/wiki/Kullback–Leibler_divergence) 
+$$
+\begin{aligned}
+  D_{\mathtt{KL}} \bigl( q(x_0) \Vert p_{\theta}(x_0) \bigr) 
+  = \int_{x_0\in \mathbb R^n} q(x_0) \log \frac{q(x_0)}{p_{\theta}(x_0)} \mathrm{d}x_0.
+\end{aligned}
+$$
+By the definition of the KL-divergence,
+$$
+\begin{aligned}
+\mu_{\theta}^*, \Sigma_{\theta}^* 
+&= \arg \min_{\mu_{\theta},\Sigma_{\theta}} D_{\mathtt{KL}} \bigl( q(x_0) \big\Vert p_{\theta}(x_0) \bigr) \cr 
+&= \arg \min_{\mu_\theta,\Sigma_\theta} \biggl( -\int q(x_0) \log \Bigl( \frac{p_{\theta}(x_0)}{q(x_0)} \Bigr) \mathrm{d}x_0 \biggr) \cr
+&= \arg \min_{\mu_{\theta},\Sigma_{\theta}} \biggl( \underbrace{-\int q(x_0) \log p_{\theta}(x_0) \mathrm{d}x_0}_{\color{blue}{\mathbb E_{X_0\sim q(x_0)}[-\log p_{\theta}(X_0)]}} \biggr).
+\end{aligned}
+$$
+Through the [evidence lower bound(ELBO)](https://en.wikipedia.org/wiki/Evidence_lower_bound),
+$$
+\begin{aligned}
+  {\color{blue}{\mathbb E_{X_0\sim q(x_0)}[-\log p_{\theta}(X_0)]}} \leq 
+  \mathbb E_{X_{0:T}\sim q(x_{0:T})} \Bigl[ -\log \frac{p_{\theta}(X_{0:T})}{q(X_{1:T}\vert X_0)} \Bigr]:= L.
+\end{aligned}
+$$
+Our goal becomes to minimize $L.$
+We separate $L$ into three parts (for details, see TODO: appendix):
+$$
+\begin{aligned}
+  L 
+  &= \underbrace{\mathbb E_{X_0\sim q(x_0)} \biggl[ D_{\mathtt{KL}} \Bigl( \underline{q(x_T \vert x_0)} \big\Vert \underline{p(x_T)} \Bigr) \Big\vert_{x_0=X_0} \biggr]}_{L_T} \cr 
+  & \qquad + \sum_{t=2}^T 
+  \underbrace{\mathbb E_{X_0,X_t\sim q(x_0,x_{t})} \biggl[ 
+    D_{\mathtt{KL}} \Bigl( 
+            {\underline{\color{red}{q(x_{t-1} \vert x_t,x_0)}}}
+            \big\Vert 
+            \underline{\color{blue}{p_{\theta}(x_{t-1}\vert x_t)} }
+            \Bigr)\Big \vert_{x_0,x_t=X_0,X_t} 
+    \biggr]}_{L_{t-1}}  \cr 
+    & \qquad \qquad + \underbrace{\mathbb E_{X_0,X_1\sim q(x_0,x_1)} \biggl[ 
+      -\log {\color{blue}{p_{\theta}(x_0 \vert x_1)}} \Big\vert_{x_0,x_1=X_0,X_1}
+      \biggr]}_{L_0}.
+\end{aligned}
+$$ {#eq-decom-L}
+
+- The first term $L_T$ controls how similar is the last image of the forward process to the pure noise.
+  $L_T$ can be calculated directly since both $q(x_T \vert x_0),\, p(x_T)$ are normal.
+  The value is
+  $$
+  \begin{aligned}
+    L_T = \frac{1}{2} \biggl( \log (1-\overline{\alpha}_T) + n \Bigl( \frac{1}{1-\overline{\alpha}_T} - 1 \Bigr) + \frac{\overline{\alpha}_T}{1-\overline{\alpha}_T} \mathbb E_{X_0\sim q(x_0)}\bigl[ \left\lVert X_0 \right\rVert^2 \bigr] \biggr).
+  \end{aligned}
+  $$
+  It is clear that $\lim_{T\rightarrow\infty} L_t = 0.$
+  From the above formula, depending only on the $L^2$-norm of $X_0,$ $L_T$ can be smaller if we shift $X_0$ by its mean.
+  We may see the case $n=1.$ TODO: 圖
+  For the question of how to choose the size of $T$, see TODO: ref.
+
+- The second term $L_{t-1},$ $t=2,\cdots,T,$ is the most important since it determines how to choose $\mu_{\theta},\Sigma_{\theta}.$
+  This term controls the similarity of $X_{t-1}$ in the forward and backward process.
+  By Bayes' rule and after a long calculation (see TODO: appendix),
+  $$
+  \begin{aligned}
+    {\color{red}{q(x_{t-1} \vert x_t,x_0)}} = \mathcal{N}\bigl( x_{t-1}; \mu_{t}(x_t,x_0),\Sigma_t \bigr),
+    \quad t = 2,\cdots,T,
+  \end{aligned}
+  $$
+  where
+  $$
+  \begin{aligned}
+    \mu_{t}(x_t,x_0)  
+    = \frac{\sqrt{\alpha_t}(1-\overline{\alpha}_{t-1})}{1-\overline{\alpha}_t}x_t + \frac{\sqrt{\overline{\alpha}_{t-1}}\beta_t}{1-\overline{\alpha}_t}x_0 ,
+    \quad
+    \Sigma_t = \frac{1-\overline{\alpha}_{t-1}}{1-\overline{\alpha}_t}\beta_t \mathbf{I}.
+  \end{aligned}
+  $$ {#eq-mu_t}
+
+  ### To determine $\Sigma_{\theta}$ for $t\geq 2$
+
+  Since both $q(x_{t-1}\vert x_t, x_0),\, p_{\theta}(x_{t-1}\vert x_t)$ are normal, it is natural to choose 
+  $$
+  \begin{aligned}
+    \Sigma_{\theta}(x,t) =
+    \Sigma_t &= \frac{1-\overline{\alpha}_{t-1}}{1-\overline{\alpha}_t}\beta_t \mathbf{I}
+    := {\color{blue}{\sigma_t^2}} \mathbf{I}.
+  \end{aligned}
+  $$ {#eq-Sig_the_indep_x}
+
+  ### To determine $\mu_{\theta}$ for $t\geq 2$
+
+  By the choice of $\Sigma_{\theta},$ we have
+  $$
+  \begin{aligned}
+    L_{t-1} 
+    &= \mathbb E_{X_0,X_t\sim q(x_0,x_t)} \Bigl[ \frac{1}{2\sigma_t^2} \bigl\lVert \mu_t(X_t,X_0) - \mu_{\theta}(X_t,t) \bigr\rVert^2 \Bigr] \cr 
+    &= \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \Bigl[ \frac{1}{2\sigma_t^2} \bigl\lVert \mu_t(X_t,X_0) - \mu_{\theta}(X_t,t) \bigr\rVert^2 \Bigr].
+  \end{aligned}
+  $$ 
+  Then we reparametrize $\mu_{\theta}$ by
+  $$
+  \begin{aligned}
+    \mu_{\theta}(X_t,t)=\mu_t\bigl(X_t, \widehat{X}_0\bigr),
+  \end{aligned}
+  $$ {#eq-mu_the_mu_t}
+  where $\widehat{X}_0=\widehat{X}_0(X_t)$ is the estimate of $X_0$ via our model by giving $X_t$ (we will give the details of $\widehat{X}_0$ later in @eq-Net_asssume1).
+  With this parametrization and by the expression of $\mu_{t}$ in @eq-mu_t, we have
+  $$
+  \begin{aligned}
+    \bigl\lVert \mu_t(X_t,X_0) - \mu_{\theta}(X_t,t)  \bigr\rVert 
+    = \frac{\sqrt{\overline{\alpha}_{t-1}}\beta_t}{1-\overline{\alpha}_t}\big\lVert X_0 - \widehat{X}_0(X_t) \big\rVert.
+  \end{aligned}
+  $$ {#eq-Net_asssume0}
+  Let $\mathtt{Net}_{\theta}:\mathbb R^n\times \lbrace 1,2,\cdots,T\rbrace\longrightarrow \mathbb R^n$ be our neural network (with parameters $\theta$) we need to train. 
+  We can choose $\mathtt{Net}_{\theta}$ to predict $X_0,$ or $\overline{\mathcal{E}}_t$ or the velocity $V_t$ (see @SNR).
+  DDPM chooses to predict the noise $\overline{\mathcal{E}}_t.$
+  Then by @eq-estimator-X0, we have the following relation
+  $$
+  \begin{aligned}
+    X_t = \sqrt{\overline{\alpha}_t} \cdot \widehat{X}_0(X_t) + \sqrt{1-\overline{\alpha}_t} \cdot \mathtt{Net}_{\theta}(X_t,t).
+  \end{aligned}
+  $$ {#eq-Net_asssume1}
+  Note that $\widehat{X}_0 = \widehat{X}_0(X_t)=\widehat{X}_0(X_t,\theta).$
+  Hence, we have
+  $$
+  \begin{aligned}
+    L_{t-1} = \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\ X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \biggl( \frac{\beta_t^2}{2\sigma_t^2\alpha_t(1-\overline{\alpha}_t)} \Big\lVert \overline{\mathcal{E}}_t - \mathtt{Net}_{\theta}(X_t,t) \Big\rVert^2 \biggr).
+  \end{aligned}
+  $$
+
+- For the third term $L_0.$
+  Recall that we assume $p_{\theta}(x_0 \vert x_1) = \mathcal{N}\bigl(x_0; \mu_{\theta}(x_1,1), \Sigma_{\theta}(x_1,1) \bigr).$
+  For convience (see @eq-Sig_the_indep_x), we choose $\Sigma_{\theta}(x_1,1)$ to be a constant matrix indepdent of $\theta$ and $x_1,$ e.g., 
+  $$
+  \begin{aligned}
+    \Sigma_{\theta}(x_1,1) = \beta_1 \mathbf{I}:={\color{blue}{\sigma_1^2}} \mathbf{I}.
+  \end{aligned}
+  $$
+  Note that
+  $$
+  \begin{aligned}
+    -\log p_{\theta} (x_0\vert x_1) = \frac{1}{2\beta_1} \big\lVert x_0 - \mu_{\theta}(x_1,1) \big\rVert^2 + \mathtt{const} ,
+  \end{aligned}
+  $$
+  where $\mathtt{const}$ is some constant independent of $(x_0,x_1,\theta).$
+  Here we also reparametrize $\mu_{\theta}$ by @eq-mu_the_mu_t for $t=1$ with $\overline{\alpha}_0:=1.$
+  In this setting, 
+  $$
+  \begin{aligned}
+    \mu_\theta(X_1,1)=\mu_1(X_1,\widehat{X}_0(X_1))=\widehat{X}_0(X_1).
+  \end{aligned}
+  $$
+  To maximize
+  $$
+  \begin{aligned}
+    L_0
+    = \mathbb E_{X_0,X_1\sim q(x_0,x_1)} \biggl[ 
+      -\log {\color{blue}{p_{\theta}(x_0 \vert x_1)}} \Big\vert_{x_0,x_1=X_0,X_1}
+      \biggr]
+  \end{aligned}
+  $$
+  is equivalent to maximize
+  $$
+  \begin{aligned}
+    L_0'=\mathbb E_{X_0,X_1\sim q(x_0,x_1)} \biggl[
+      \frac{1}{2\beta_1} \big\lVert X_0 - \widehat{X}_0(X_1) \big\rVert^2
+      \biggr].
+  \end{aligned}
+  $$
+  Hence, if we use the same assumption from @eq-Net_asssume1,
+  our goal is to minimize
+  $$
+  \begin{aligned}
+    L_0' &=  \mathbb E_{X_0,X_1\sim q(x_0,x_1)} \biggl[
+      \frac{1-\alpha_1}{2\beta_1 \alpha_1} 
+      \big\lVert X_0 - \widehat{X}_0(X_1)  
+      \big\rVert^2
+      \biggr]  \cr
+      &=
+      \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\ X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \biggl( \frac{\beta_t^2}{2\sigma_t^2\alpha_t(1-\overline{\alpha}_t)} \Big\lVert \overline{\mathcal{E}}_t - \mathtt{Net}_{\theta}(X_t,t) \Big\rVert^2 \biggr)
+  \end{aligned}
+  $$
+  with $t=1.$
+    
+## Training and Sampling
+
+Note that we will minimize $\mathbb E_{X\sim q(x)}[f_{\theta}(X)]$ by **repeating** the following:
+<!-- **until** converge: -->
+  
+- Sampling $x\sim q(x)$ and then
+- minimizing $f_{\theta}(x)$ by taking gradient descent on $\theta.$
+
+Recall that for $t = 2,3,\cdots,T,$
+$$
+\begin{aligned}
+  L_{t-1} = \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\ X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \biggl( \frac{\beta_t^2}{2\sigma_t^2\alpha_t(1-\overline{\alpha}_t)} \Big\lVert \overline{\mathcal{E}}_t - \mathtt{Net}_{\theta}(X_t,t) \Big\rVert^2 \biggr).
+\end{aligned}
+$$
+DDPM chooses a simple version that minimizes $L_{t-1}^{\text{simple}},$ ignoring the weights in the expectation:
+$$
+\begin{aligned}
+  L_{t-1}^{\text{simple}} = \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\ X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \biggl(  \Big\lVert \overline{\mathcal{E}}_t - \mathtt{Net}_{\theta}(X_t,t) \Big\rVert^2 \biggr).
+\end{aligned}
+$$
+$L_0$ is the same. Therefore, our training algorithm is as follows:
+
+::: {.pseudocode}
+#| label: alg-test-text-style
+#| html-indent-size: "1.2em"
+#| html-comment-delimiter: "▷"
+#| html-line-number: true
+#| html-line-number-punc: ":"
+#| html-no-end: false
+#| pdf-placement: "H"
+#| pdf-line-number: true
+
+#### Training (DDPM)
+- **Repeat**
+  - $t\sim \text{Uniform}(\lbrace 1,\cdots,T \rbrace)$
+    - **Comment** Sample random step
+  - $x_0\sim q(x_0)$
+    - **Comment** Sample random initial image
+  - $\overline{\varepsilon}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})$
+    - **Comment** Sample random noise
+  - $x_t = \sqrt{\overline{\alpha}_t}x_0 + \sqrt{1-\overline{\alpha}_t}\cdot \overline{\varepsilon}_t$
+  - Take gradient descent step on $\Bigl\lVert \overline{\varepsilon}_t - \mathtt{Net}_{\theta}(x_t,t) \Bigr\rVert^2$
+    - **Comment** Optimization
+- **Until** converged
+:::
+
+For the sampling, we may sample $x_0\sim p_{\theta}(x_0)$ by the following:
+
+- Sample $x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I}).$
+- Sample $x_{t-1}\sim p_{\theta}(x_{t-1}\vert x_t)$ inductively for $t=T,T-1,\cdots,1.$
+
+Recall that $p_{\theta}(x_{t-1}\vert x_t)\sim \mathcal{N}(\mu_{\theta}(x_t,t),\sigma_t \mathbf{I}),$
+where
+$$
+\begin{aligned}
+  \mu_{\theta} (x_t,t) = \frac{1}{\sqrt{\alpha_t}} \Bigl( 
+    x_t - \frac{\beta_t}{\sqrt{1-\overline{\alpha}_t}} \mathtt{Net}_{\theta} (x_t,t)
+    \Bigr).
+\end{aligned}
+$$
+
+Therefore, our sampling algorithm is as follows:
+
+::: {.pseudocode}
+#| label: alg-diffusion-model-sampling-shortly
+#| html-indent-size: "1.2em"
+#| html-comment-delimiter: "▷"
+#| html-line-number: true
+#| html-line-number-punc: ":"
+#| html-no-end: false
+#| pdf-placement: "H"
+#| pdf-line-number: true
+
+#### Sampling (DDPM)
+- $x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I})$
+- **For** $t=T,\cdots,1$
+  - **If** $t>1$
+    - $z \sim \mathcal{N}(\mathbf{0},\mathbf{I})$
+  - **Else**
+    - $z= \mathbf{0}$
+  - **EndIf**
+  - $x_{t-1}=\frac{1}{\sqrt{\alpha_t}}\Big(x_t-\frac{1-\alpha_t}{\sqrt{1-\overline{\alpha}_t}}\mathtt{Net}_{\theta}(x_t,t)\Big)+\sigma_t z$
+- **EndFor**
+- **Return** $x_0$
+:::
+
+
+
+## DDIM {#sec-DDIM}
+
+One of the major drawbacks of DDPM is the lengthy time required for data generation, especially when compared to other generative AI methods. 
+In response to this issue, an improved version of DDPM, known as Denoising Diffusion Implicit Models (DDIM), was introduced by Song et al. (@song2022denoising). The primary innovation of DDIM is its ability to significantly accelerate the data generation process. By refining the underlying diffusion mechanism, DDIM reduces the number of required diffusion steps without sacrificing the quality of the generated data. This breakthrough makes DDIM a more practical and efficient alternative for generative AI tasks, offering faster performance while maintaining high-quality outputs.
+
+Now we introduce the DDIM.
+The main reason why we can decompose $L$ in @eq-decom-L in DDPM is that we have the following production of two densities:
+$$
+\begin{aligned}
+  p_{\theta}(x_{0:T}) &= p_{\theta}(x_T) \cdot \prod_{t=2}^T p_{\theta}(x_{t-1}\vert x_t) \cdot  p_{\theta}(x_0\vert x_1) , \cr 
+  q(x_{1:T}\vert x_0) &= q(x_T\vert x_0) \cdot \prod_{t=2}^{T} q(x_{t-1} \vert x_{t}, x_0).
+\end{aligned}
+$$ {#eq-q_prod}
+DDIM consider a new forward process $\bigl( \lbrace X_0,X_1,\cdots,X_T\rbrace, \mathbf{Q}_{\sigma} \bigr),$ where $\mathbf{Q}_{\sigma}$ is some probability measure  indexed by $\sigma\in [0,\infty)^T$. 
+The forward process is not a Markov chain but has the same conditional density of $X_{t}$ given $X_0=x_0$ for each $t$ as DDPM.
+Inspired by @eq-q_prod, DDIM directly defines the joint density
+$$
+\begin{aligned}
+  q_{\sigma}(x_{0:T}) := q_{\sigma}(x_T\vert x_0) \cdot \prod_{t=2}^T q_{\sigma}(x_{t-1}\vert x_t, x_0) \cdot q(x_0),
+\end{aligned}
+$$
+where $q_{\sigma}(x_T\vert x_0):=\mathcal{N}(\sqrt{\overline{\alpha}_T}x_0,(1-\overline{\alpha}_T)\mathbf{I})$ and
+$$
+\begin{aligned}
+  q_{\sigma} (x_{t-1}\vert x_t,x_0) := \mathcal{N}\biggl( \sqrt{\overline{\alpha}_{t-1}}x_0 + \sqrt{1-\overline{\alpha}_{t-1} - \sigma_t^2} \cdot \frac{x_t-\sqrt{\overline{\alpha}_t}x_0}{\sqrt{1-\overline{\alpha}_t}} , \sigma_t^2 \mathbf{I} \biggr), \quad t=2,\cdots, T.
+\end{aligned}
+$$
+Note that $q_{\sigma}(x_{0:T})$ is a density since it is a product of densities.
+This seems a little weird that the joint density of $q_{\sigma}(x_{0:T})$ is determined by some conditional density.
+In fact, $\bigl(\lbrace X_0,X_1,\cdots,X_T \rbrace,\mathbf{Q}_{\sigma}\bigr)$ is a process satisfying the following conditions:
+
+1. Under $\mathbf{Q}_{\sigma},$ $X_0$ has the density $q(x_0).$
+2. Conditioned on $X_0=x_0,$ the process $\Bigl( \lbrace X_T,X_{T-1},\cdots, X_2,X_1\rbrace\Big\vert_{X_0=x_0}, \mathbf{Q}_{\sigma} \Bigr)$ is a Markov chain with 
+   - the initial density $q_{\sigma}(x_T\vert x_0)= \mathcal{N}(\sqrt{\overline{\alpha}_T}x_0,(1-\overline{\alpha}_T)\mathbf{I})$ and 
+   - the transition density
+      $$
+      \begin{aligned}
+        q_{\sigma} (x_{t-1}\vert x_t,x_0) = \mathcal{N}\biggl( \sqrt{\overline{\alpha}_{t-1}}x_0 + \sqrt{1-\overline{\alpha}_{t-1} - \sigma_t^2} \cdot \frac{x_t-\sqrt{\overline{\alpha}_t}x_0}{\sqrt{1-\overline{\alpha}_t}} , \sigma_t^2 \mathbf{I} \biggr), \quad t=2,\cdots, T.
+      \end{aligned}
+      $$
+
+   Note that if we write $q_{\sigma}(x_{t-1}\vert x_t,x_0)=\mathcal{N} \bigl(f(x_t,x_0,t), \sigma_t^2 \mathbf{I}\bigr),$ 
+   then the process $\Bigl( \lbrace X_T,X_{T-1},\cdots, X_2,X_1\rbrace\Big\vert_{X_0=x_0}, \mathbf{Q}_{\sigma} \Bigr)$ can be write as, conditioned on $X_0=x_0,$
+   $$
+   \begin{aligned}
+     X_{t-1} = f(X_t,x_0,t) + \sigma_t \xi_t, \quad t=T,\cdots, 2,
+   \end{aligned}
+   $$
+   where $X_T,\xi_{T-1},\xi_{T-2},\cdots, \xi_{1}$ are independent under $\mathbf{Q}_{\sigma}.$
+
+For each $\sigma\in [0,\infty)^T,$
+we can show that for this joint density $q_{\sigma}(x_{0:T}),$
+$$
+\begin{aligned}
+  q_{\sigma}(x_0) &= q(x_0), \cr
+  q_{\sigma} (x_t \vert x_0) &= \mathcal{N} \bigl(\sqrt{\overline{\alpha}_t}x_0, (1-\overline{\alpha}_t)\mathbf{I}\bigr) = q(x_t\vert x_0) , \quad t=1,\cdots,T.
+\end{aligned}
+$$
+DDIM consider the backward process $\bigl( \lbrace X_T,X_{T-1},\cdots,X_1,X_0 \rbrace, \mathbf{P}_{\theta} \bigr)$  as a Markov chain with the initial distribution $p_{\theta}({x_T})=\mathcal{N}(\mathbf{0},\mathbf{I})$ and the transition density
+$$
+\begin{aligned}
+  p_{\theta}(x_0\vert x_1) &= \mathcal{N}( {\color{blue}{\widehat{x}_0(x_1,1)}}, \sigma_1^2 \mathbf{I} )  , \cr
+  p_{\theta}(x_{t-1}\vert x_t) &= q_{\sigma}(x_{t-1}\vert x_t,{\color{blue}{\widehat{x}_0}}) \cr
+  &= \mathcal{N}\biggl( \sqrt{\overline{\alpha}_{t-1}}{\color{blue}{\widehat{x}_0}} + \sqrt{1-\overline{\alpha}_{t-1} - \sigma_t^2} \cdot \frac{x_t-\sqrt{\overline{\alpha}_t}{\color{blue}{\widehat{x}_0}}}{\sqrt{1-\overline{\alpha}_t}} , \sigma_t^2 \mathbf{I} \biggr), \quad t=2,\cdots, T,
+\end{aligned}
+$$
+where ${\color{blue}{\widehat{x}_0}}=\widehat{x}_0(x_t,t)$  satisfies
+$$
+\begin{aligned}
+  x_t = \sqrt{\overline{\alpha}_t}\cdot \widehat{x}_0 (x_t,t) + \sqrt{1-\overline{\alpha}_t} \cdot \mathtt{Net}_{\theta}(x_t,t), \quad x\in \mathbb R^n,\, t\in \mathbb N.
+\end{aligned}
+$$
+By the constructions of $q_{\sigma},p_{\theta},$ we still have the decomposition
+$$
+\begin{aligned}
+  &\mathbb E_{X_{0:T}\sim q_{\sigma}(x_{0:T})} \Bigl[ -\log \frac{p_{\theta}(X_{0:T})}{q_{\sigma}(X_{1:T}\vert X_0)} \Bigr] \cr  
+  &= \underbrace{\mathbb E_{X_0\sim q_{\sigma}(x_0)} \biggl[ D_{\mathtt{KL}} \Bigl( \underline{q_{\sigma}(x_T \vert x_0)} \big\Vert \underline{p(x_T)} \Bigr) \Big\vert_{x_0=X_0} \biggr]}_{L_T} \cr 
+  & \qquad + \sum_{t=2}^T 
+  \underbrace{\mathbb E_{X_0,X_t\sim q_{\sigma}(x_0,x_{t})} \biggl[ 
+    D_{\mathtt{KL}} \Bigl( 
+            {\underline{\color{red}{q_{\sigma}(x_{t-1} \vert x_t,x_0)}}}
+            \big\Vert 
+            \underline{\color{blue}{p_{\theta}(x_{t-1}\vert x_t)} }
+            \Bigr)\Big \vert_{x_0,x_t=X_0,X_t} 
+    \biggr]}_{L_{t-1}}  \cr 
+    & \qquad \qquad + \underbrace{\mathbb E_{X_0,X_1\sim q_{\sigma}(x_0,x_1)} \biggl[ 
+      -\log {\color{blue}{p_{\theta}(x_0 \vert x_1)}} \Big\vert_{x_0,x_1=X_0,X_1}
+      \biggr]}_{L_0}.
+\end{aligned}
+$$
+There are two special values for $\sigma.$
+
+- The first one is
+  $$
+  \begin{aligned}
+    \sigma_t = \sqrt{(1-\overline{\alpha}_{t-1})/(1-\overline{\alpha}_t)} \sqrt{ 1-\alpha_t }, \quad t = 1,\cdots, T.
+  \end{aligned}
+  $$
+  Under this $\sigma,$
+  the process $\bigl(\lbrace X_0,X_1,\cdots,X_T \rbrace,\mathbf{Q}_{\sigma}\bigr)$ becomes a Markov chain,
+  hence the DDIM becomes the original DDPM.
+
+- The second one is $\sigma_t = 0$ for $t=1,2,\cdots, T.$
+  In this case, the backward process $\bigl(\lbrace X_T,X_{T-1},\cdots,X_0 \rbrace,\mathbf{P}_{\theta}\bigr)$ becomes deterministic when we condition on $X_T = x_T.$
+  This greatly speeds up the sampling of diffusion models.
+  In this case, we may write
+  $$
+  \begin{aligned}
+    X_{t-1} = \sqrt{\overline{\alpha}_{t-1}} \widehat{X}_0 (X_t,t)  +  \sqrt{1-\overline{\alpha}_{t-1}} \cdot \mathtt{Net}_{\theta}(X_t,t), \quad t=T,T-1,\cdots, 1.
+  \end{aligned}
+  $$
+  
+
+{{< include _Classifier_Guidance.qmd >}}
+
+
+
+<!-- 
+## SNR
+
+Efficient Diffusion Training via Min-SNR Weighting Strategy 
+-->
+
+
+## Predict Velocity
+
+We have two predictions in the following.
+
+  - The first is to predict the initial image $X_0$ by giving $X_t.$
+    We set
+    $$
+    \begin{aligned}
+      \mu_{\theta}(x_t,t) 
+      &= \mu_t \Bigl( x_t, \mathtt{Net}_{\theta}(x_t,t) \Bigr) \cr
+      &= \frac{\sqrt{\alpha_t}(1-\overline{\alpha}_{t-1})}{1-\overline{\alpha}_t}x_t + \frac{\sqrt{\overline{\alpha}_{t-1}}\beta_t}{1-\overline{\alpha}_t} \cdot \mathtt{Net}_{\theta}(x_t,t) , \quad x_t \in \mathbb R^n,\, t=2, \cdots, T,
+    \end{aligned}
+    $$
+    and then
+    $$
+    \begin{aligned}
+      \Bigl\lVert \mu_t(x_t,x_0)- \mu_{\theta}(x_t,t) \Bigr\rVert 
+      = \frac{\sqrt{\overline{\alpha}_{t-1}}\beta_t}{1-\overline{\alpha}_t} \Bigl\lVert  x_0 - \mathtt{Net}_{\theta}(x_t,t) \Bigr\rVert.
+    \end{aligned}
+    $$
+    
+  - The second is to predict the noise $\overline{\varepsilon}_t$ by giving $x_t,t.$
+    We set
+    $$
+    \begin{aligned}
+      \mu_{\theta}(x_t,t)
+      &= \widetilde{\mu}_t \Bigl( x_t, \mathtt{Net}_{\theta}(x_t,t) \Bigr)  \cr
+      &= \frac{1}{\sqrt{\alpha_t}} \Bigl( 
+        x_t - \frac{\beta_t}{\sqrt{1-\overline{\alpha}_t}} \cdot \mathtt{Net}_{\theta}(x_t,t)
+      \Bigr) , \quad x_t \in \mathbb R^n,\, t=2,\cdots, T,
+    \end{aligned}
+    $$
+    and then
+    $$
+    \begin{aligned}
+      \Bigl\lVert \mu_t(x_t,x_0)- \mu_{\theta}(x_t,t) \Bigr\rVert =  \frac{\beta_t}{\sqrt{\alpha_t}\cdot \sqrt{1-\overline{\alpha}_t}} \Bigl\lVert \overline{\varepsilon}_t - \mathtt{Net}_{\theta}(x_t,t)  \Bigr\rVert.
+    \end{aligned}
+    $$
+
+In the backward process,
+we predict the noise $\overline{\mathcal{E}}_t$ or the initial image $X_0.$
+There is another prediction (prediction for the velocity, see TODO: pred_v).
+For simplicity, we set
+$$
+\begin{aligned}
+  a_t := \sqrt{\overline{\alpha}_t}, \quad b_t := \sqrt{1-\overline{\alpha}_t}.
+\end{aligned}
+$$
+Then we may rewrite
+$$
+\begin{aligned}
+  X_t = a_t X_0 + b_t \overline{\mathcal{E}}_t, \quad a_t^2+b_t^2 = 1.
+\end{aligned}
+$$
+Define the velocity,
+a random vector we want to predict,
+$$
+\begin{aligned}
+  V_t := -b_t X_0 + a_t \overline{\mathcal{E}}_t.
+\end{aligned}
+$$
+Then we have the following relations:
+$$
+\begin{aligned}
+  X_0 &= a_t X_t - b_t V_t , \cr  
+  \overline{\mathcal{E}}_t &= b_t X_t + a_t V_t.
+\end{aligned}
+$$
+
+
+Then our algorithms become
+
+1. Training
+
+    - $x_0\sim q(x_0)$
+    - $\overline{\varepsilon}_t \sim \mathcal{N}(\mathbf{0},\mathbf{I})$
+    - $x_t=a_t x_0 + b_t \overline{\varepsilon}_t$
+    - $v_t = -b_t x_0 + a_t \overline{\varepsilon}_t$
+    - Loss is $\bigl\lVert \texttt{Net}_{\theta} (x_t,t) - v_t \bigr\rVert^2$
+
+2. Sampling
+
+    - $\widehat{v}=\texttt{Net}_{\theta}(x_t,t)$
+    - $\widehat{\varepsilon}=b_t x_t + a_t \widehat{v},\quad \widehat{x}_0=a_t x_t - b_t \widehat{v}$
+    - $\widehat{\mu}=\frac{1}{\sqrt{\alpha_t}}\Bigl( x_t- \frac{\beta_t}{b_t} \Bigr) \widehat{\varepsilon}$
+
+
+{{< include _Experiments_Conclusion.qmd >}}
+
+
+{{< pagebreak >}}
+
+# References {.unnumbered}
+::: {#refs}
+:::
+
+{{< pagebreak >}}
+
+
+\setcounter{section}{0}
+\renewcommand{\thesection}{\Alph{section}}
+\setcounter{table}{0}
+\renewcommand{\thetable}{A\arabic{table}}
+\setcounter{figure}{0}
+\renewcommand{\thefigure}{A\arabic{figure}}
+
+# Appendix {.appendix}
+
+## Markov property is equivalent to adding noise independently {#sec-markov-equivalent}
+
+Given the probability measure $\mathbf{Q}$ such that
+
+- $q(x_0)$ is the mass (respect to $\mathbf{Q}$) of our image data, and
+- $X_0,\mathcal{E}_1,\cdots,\mathcal{E}_T$ are independent under $\mathbf{Q},$ and
+- $\mathcal{E}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})$ under $\mathbf{Q}$ for $t=1,\cdots, T.$
+
+
+Under the assumptions above,
+we have the following properties under $\mathbf{Q}$:
+
+- Under $\mathbf{Q},$
+  if we set 
+  $$
+  \begin{aligned}
+    X_t = \sqrt{\overline{\alpha}_t}X_{0}+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t,
+  \end{aligned}
+  $$
+  then $X_0,$ $\overline{\mathcal{E}}_t$ are independent, and $\overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I}).$
+  Note that this property says that $q(x_T)\approx \mathcal{N}(\mathbf{\mathbf{0},\mathbf{I}})$ as $T$ large.
+
+- Under $\mathbf{Q},$ $\lbrace X_0,X_1,\cdots,X_T\rbrace$ is a Markov chain with the transition density
+  $$
+  \begin{aligned}
+    q(x_t\vert x_{t-1}) = \mathcal{N}(\sqrt{\alpha_t}x_{t-1},\beta_t \mathbf{I}).
+  \end{aligned}
+  $$
+
+::: {.remark}
+Note that the Markov property is equivalent to adding noise independently.
+That is, if $\bigl( \lbrace X_t\rbrace_{t=0}^T, \mathbf{Q} \bigr)$ is a Markov chain with the transition density
+$$
+\begin{aligned}
+  q(x_t\vert x_{t-1}) = \mathcal{N}(\sqrt{\alpha_t}x_{t-1},\beta_t \mathbf{I}).
+\end{aligned}
+$$
+and we set 
+$$
+\begin{aligned}
+  X_t = \sqrt{\overline{\alpha}_t}X_{0}+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t,
+\end{aligned}
+$$
+then 
+
+- $X_0,\mathcal{E}_1,\cdots,\mathcal{E}_T$ are independent under $\mathbf{Q},$ and
+- $\mathcal{E}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})$ under $\mathbf{Q}$ for $t=1,\cdots, T.$
+:::
+
+## $q(x_0) \approx p(x_0)$
+
+Note that
+$$
+\begin{aligned}
+  q(x_{0:3}) 
+  &= q(x_3\vert x_2) \cdot q(x_2\vert x_1) \cdot q(x_1\vert x_0) \cdot q(x_0) \cr 
+  &= \frac{q(x_3)}{q(x_2)}q(x_2\vert x_3) \cdot \frac{q(x_2)}{q(x_1)}q(x_1\vert x_2)\cdot \frac{q(x_1)}{q(x_0)} q(x_0\vert x_1) \cdot q(x_0) \cr 
+  &= q(x_0\vert x_1) \cdot q(x_1\vert x_2) \cdot q(x_2\vert x_3) \cdot \underbrace{q(x_3)}_{\approx \mathcal{N}(\mathbf{0},\mathbf{I})}
+\end{aligned}
+$$
+and
+$$
+\begin{aligned}
+  p(x_{0:3}) = q(x_0\vert x_1) \cdot q(x_1\vert x_2) \cdot q(x_2\vert x_3) \cdot \underbrace{p(x_3)}_{\mathcal{N}(\mathbf{0},\mathbf{I})}.
+\end{aligned}
+$$
+Then
+$$
+\begin{aligned}
+  q(x_0) = \int_{x_{1:3}} q(x_{0:3}) \, \mathrm{d}x_{0:3} \approx \int_{x_{1:3}} p(x_{1:3}) \, \mathrm{d}x_{0:3} = p(x_0).
+\end{aligned}
+$$
+
+## SDE
+
+If $(X_t)_{t\in [0,1]}$ satisfies the SDE
+$$
+\begin{aligned}
+  \mathrm{d} X_t = \mu(X_t,t) \mathrm{d}t + \sigma(X_t,t) \mathrm{d}B_t,
+\end{aligned}
+$$
+where $\mu(\cdot ,t):\mathbb R^n\longrightarrow \mathbb R^n$ and $\sigma(\cdot ,t): \mathbb R^n \longrightarrow \mathbb R^{n\times n}$ and $(B_t)_{t\in [0,1]}$ is a standard $n$-dimensional Brownian Motion.
+Let $q(\cdot , t)$ be the density of $X_t$ for each $t\in [0,1].$
+We have the following results:
+
+- For $t\in [0,1],$ we define
+  $$
+  \begin{aligned}
+    \overline{X}_t &:= X_{1-t}, \quad  &
+    \overline{q}(\cdot , t) &:= q(\cdot , 1-t), \quad\cr 
+    \overline{\mu}(\cdot , t) &:= \mu(\cdot , 1-t), \quad  &
+    \overline{\sigma}(\cdot , t) &:= \sigma( \cdot , 1-t ).
+  \end{aligned}
+  $$
+  Then by @ANDERSON1982313, 
+  the **reverse process** $(\overline{X}_t)_{t\in [0,1]}$ satisfies
+  $$
+  \begin{aligned}
+    \mathrm{d} \overline{X}_t 
+    &= \Bigl( \underbrace{-\overline{\mu}(X_t,t) + 
+      \overline{\sigma} \bigl( \overline{X}_t,t \bigr) \overline{\sigma} \bigl( \overline{X}_t,t \bigr)^{\mathtt{T}} \nabla_{x} \log \overline{q}\bigl( \overline{X}_t,t \bigr) 
+      + \nabla_x  \overline{\sigma} \bigl( \overline{X}_t,t \bigr) \overline{\sigma} \bigl( \overline{X}_t,t \bigr)^{\mathtt{T}}}_{\text{drift coefficient}}
+      \Bigr) \mathrm{d}t  \cr 
+    & \qquad + \underbrace{\overline{\sigma}\bigl( \overline{X}_t,t \bigr)}_{\text{diffusion coefficient}} \mathrm{d}\overline{B}_t,
+  \end{aligned}
+  $$ {#eq-reverseSDE0}
+  where $(\overline{B}_t)_{t\in [0,1]}$ is a standard $n$-dimensional Brownian Motion.
+  
+  - Note that the diffusion coefficient of the reverse process $\bigl( \overline{X}_t \bigr)_{t\in [0,1]}$ has the same form as $(X_t)_{t\in [0,1]}.$
+    This explains why it is reasonable to assume that $\Sigma_{\theta}(x,t)$ is independent of $x$ in @eq-Sig_the_indep_x.
+  
+  - If $\sigma(\cdot ,t)=\sigma(t)$ is independent of $x,$
+    then $\nabla_x  \overline{\sigma} \bigl( \overline{X}_t,t \bigr) \overline{\sigma} \bigl( \overline{X}_t,t \bigr)^{\mathtt{T}}=0$ 
+    and the drift coefficient of @eq-reverseSDE0 is the original average $-\overline{\mu}(X_t,t)$ guided by the score function $\nabla_{x} \log \overline{q}\bigl( \overline{X}_t,t \bigr).$
+
+- Consider a process $(\widetilde{X}_t)_{t\in[0,1]}$ satisfies the ODE
+  $$
+  \begin{aligned}
+    \mathrm{d}\widetilde{X}_t 
+    = \Bigl( \mu(\widetilde{X}_t, t) 
+    - \frac{1}{2} \sigma(\widetilde{X}_t,t) \sigma(\widetilde{X}_t,t)^{\mathtt{T}} \nabla_{x} \log q(\widetilde{X}_t,t) 
+    - \frac{1}{2} \nabla_x \sigma(\widetilde{X}_t,t) \sigma(\widetilde{X}_t,t)^{\mathtt{T}} \Bigr) \mathrm{d}t.
+  \end{aligned}
+  $$
+  Then for each $t\in [0,1],$ $X_t$ and $\widetilde{X}_t$ have the same distribution.
+  
+## Seperate $L$
+
+$$
+\begin{aligned}
+  L :=
+  \mathbb E_{X_{0:T}\sim q(x_{0:T})} \Bigl[ -\log \frac{p_{\theta}(X_{0:T})}{q(X_{1:T}\vert X_0)} \Bigr].
+\end{aligned}
+$$
+$$
+\begin{aligned}
+  p_{\theta}(x_{0:T}) &= p_{\theta}(x_T) \cdot \prod_{t=2}^T p_{\theta}(x_{t-1}\vert x_t) \cdot  p_{\theta}(x_0\vert x_1) , \cr 
+  q(x_{1:T}\vert x_0) &= \prod_{t=2}^{T} q(x_t \vert x_{t-1}) \cdot q(x_1\vert x_0) \cr 
+  &= \prod_{t=2}^{T} q(x_t \vert x_{t-1}, x_0) \cdot q(x_1\vert x_0) \cr 
+  &= \prod_{t=2}^{T} \frac{q(x_{t-1} \vert x_{t}, x_0) q(x_t\vert x_0) }{q(x_{t-1}\vert x_0)} \cdot q(x_1\vert x_0) \cr 
+  &= q(x_T\vert x_0) \cdot \prod_{t=2}^{T} q(x_{t-1} \vert x_{t}, x_0)
+\end{aligned}
+$$
+

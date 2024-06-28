@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.554">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="ChoCho">
+<meta name="keywords" content="Diffusion Models">
+
+<title>Diffusion Models Note</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="index_files/libs/clipboard/clipboard.min.js"></script>
+<script src="index_files/libs/quarto-html/quarto.js"></script>
+<script src="index_files/libs/quarto-html/popper.min.js"></script>
+<script src="index_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="index_files/libs/quarto-html/anchor.min.js"></script>
+<link href="index_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="index_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="index_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="index_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="index_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="index_files/libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.js"></script>
+<link href="index_files/libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.css" rel="stylesheet">
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">1</span> Introduction</a></li>
+  <li><a href="#background" id="toc-background" class="nav-link" data-scroll-target="#background"><span class="header-section-number">2</span> Background</a>
+  <ul class="collapse">
+  <li><a href="#forward-process" id="toc-forward-process" class="nav-link" data-scroll-target="#forward-process"><span class="header-section-number">2.1</span> Forward process</a></li>
+  <li><a href="#backward-process" id="toc-backward-process" class="nav-link" data-scroll-target="#backward-process"><span class="header-section-number">2.2</span> Backward process</a></li>
+  <li><a href="#training-and-sampling" id="toc-training-and-sampling" class="nav-link" data-scroll-target="#training-and-sampling"><span class="header-section-number">2.3</span> Training and Sampling</a></li>
+  <li><a href="#sec-DDIM" id="toc-sec-DDIM" class="nav-link" data-scroll-target="#sec-DDIM"><span class="header-section-number">2.4</span> DDIM</a></li>
+  <li><a href="#sec-cdm" id="toc-sec-cdm" class="nav-link" data-scroll-target="#sec-cdm"><span class="header-section-number">2.5</span> Conditional Diffusion Model</a></li>
+  <li><a href="#predict-velocity" id="toc-predict-velocity" class="nav-link" data-scroll-target="#predict-velocity"><span class="header-section-number">2.6</span> Predict Velocity</a></li>
+  </ul></li>
+  <li><a href="#experiments" id="toc-experiments" class="nav-link" data-scroll-target="#experiments"><span class="header-section-number">3</span> Experiments</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">4</span> Conclusion</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF (arxiv)</a></li></ul></div></nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Diffusion Models Note</h1>
+</div>
+
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author"><a href="https://github.com/ChoCho66/">ChoCho</a> <a href="mailto:kycho@math.ncu.edu.tw" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            National Central University
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+  
+    
+  </div>
+  
+<div>
+  <div class="abstract">
+    <div class="block-title">Abstract</div>
+    <p>The purpose of this survey is to introduce the diffusion model. We will first introduce the basic concepts of DDPM, and then introduce some developments based on DDPM, including DDIM and the condition diffusion model. We will be writing using symbols customary to the mathematics department.</p>
+  </div>
+</div>
+
+<div>
+  <div class="keywords">
+    <div class="block-title">Keywords</div>
+    <p>Diffusion Models</p>
+  </div>
+</div>
+
+</header>
+
+
+<section id="introduction" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Introduction</h1>
+<p><strong>Diffusion Probabilistic Models (DPM, or Diffusion Models)</strong> were first proposed by <span class="citation" data-cites="pmlr-v37-sohl-dickstein15">Sohl-Dickstein et al. (<a href="#ref-pmlr-v37-sohl-dickstein15" role="doc-biblioref">2015</a>)</span>. We will focus on the DDPM (Denoising Diffusion Probabilistic Models) (<span class="citation" data-cites="ho2020denoising">Ho, Jain, and Abbeel (<a href="#ref-ho2020denoising" role="doc-biblioref">2020</a>)</span>). We will also introduce some developments based on DDPM: including DDIM (Denoising Diffusion Implicit Models) (<a href="#sec-DDIM" class="quarto-xref">Section&nbsp;2.4</a>) and the condition diffusion model (<a href="#sec-cdm" class="quarto-xref">Section&nbsp;2.5</a>).</p>
+<p>The history of generative AI is rich and multifaceted, dating back several decades. Initially, generative models were relatively simplistic, but advancements over time have led to the development of more sophisticated techniques. One of the earliest breakthroughs in this field was the introduction of the Variational Autoencoder (VAE) (<span class="citation" data-cites="kingma2022autoencoding">Kingma and Welling (<a href="#ref-kingma2022autoencoding" role="doc-biblioref">2022</a>)</span>). VAEs employ a probabilistic approach to model the distribution of data, allowing for the generation of new, similar data points by sampling from this distribution. Following VAEs, Generative Adversarial Networks (GANs) (<span class="citation" data-cites="goodfellow2014generative">Goodfellow et al. (<a href="#ref-goodfellow2014generative" role="doc-biblioref">2014</a>)</span>) revolutionized generative AI by using a game-theoretic approach, where two neural networks—the generator and the discriminator—compete in a zero-sum game, resulting in the creation of highly realistic data.</p>
+<p>Diffusion models are a newer addition to this landscape and have shown remarkable promise. These models work by simulating the diffusion process, wherein data points are progressively transformed from a simple distribution (like Gaussian noise) to a complex data distribution. Notable types of diffusion models include Denoising Diffusion Probabilistic Models (DDPMs) and Noise-Conditional Score Networks (NCSNs). DDPMs iteratively refine noisy data points until they resemble the target distribution, whereas NCSNs use score matching to model the gradient of the data distribution, which guides the generation process.</p>
+<p>Recent developments in diffusion models have focused on enhancing their efficiency and quality. Innovations such as improved noise scheduling, hybrid architectures combining features from VAEs and GANs, and advancements in training techniques have all contributed to the rapid evolution of diffusion models. These advancements have enabled diffusion models to generate data with unprecedented fidelity and have opened new avenues for their application across various domains, including image synthesis, natural language processing, and beyond.</p>
+<p>In summary, diffusion models have emerged as a powerful tool within the generative AI toolkit. Their ongoing development promises to further push the boundaries of what is possible in data generation, offering exciting possibilities for both research and practical applications.</p>
+<p>Next, we introduce the basic concepts of DDPM.</p>
+</section>
+<section id="background" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Background</h1>
+<p>The diffusion model consists of two main parts:</p>
+<ol type="1">
+<li><strong>Adding Noise (Forward Process):</strong> We gradually introduce independent noise to the starting image until it becomes pure noise.</li>
+<li><strong>Denoising (Backward Process):</strong> Beginning with pure noise, we use the current image to estimate what the previous image looked like. Repeating this process step by step, the final output image is our generated picture.</li>
+</ol>
+<p>TODO: 補圖</p>
+<p>We use mathematical formulas to describe the above statement. Given <span class="math inline">T\in \mathbb N.</span> Fix constants <span class="math inline">\alpha_t,\beta_t\in (0.001,0.999)</span> for <span class="math inline">t=1,2,\cdots,T</span> such that <span class="math inline">\alpha_t+\beta_t=1.</span> We set the following random vectors of <span class="math inline">\mathbb R^n</span> (note that here we only have random vectors and not probability measures):</p>
+<ul>
+<li><span class="math inline">X_0</span>: The initial image.</li>
+<li><span class="math inline">\mathcal{E}_t,\, t=1,2,\cdots,T</span>: The noise added in step <span class="math inline">t</span>.</li>
+<li><span class="math inline">X_t = \sqrt{\alpha_{t}}X_{t-1} + \sqrt{\beta_t}\mathcal{E}_t,\, t=1,2,\cdots,T</span>: The image in step <span class="math inline">t.</span></li>
+</ul>
+<p>To have the concepts of <strong>independence</strong> and <strong>noise</strong>, we need to have probability measures. In the following text, we use lowercase <span class="math inline">q(x)</span> to denote the density of a probability measure <span class="math inline">\mathbf{Q}</span> corresponding to the random variable <span class="math inline">X.</span> Others (e.g., <span class="math inline">q(x_t),p_{\theta}(x_t)</span>) are the same (<span class="math inline">p_{\theta}</span> corresponds to <span class="math inline">\mathbf{P}_{\theta}</span>). We also use <span class="math inline">q(x_{0:t})</span> to denote the density of <span class="math inline">(X_0,X_1,\cdots,X_t):=X_{0:t}</span> for the probability measure <span class="math inline">\mathbf{Q}.</span> Others are the same.</p>
+<p>Suppose <span class="math inline">q_{\text{want}}(x_0)</span> is the density of <span class="math inline">X_0</span> we want to pursue. We do not know what <span class="math inline">q_{\text{want}}(x_0)</span> is. We only have some eligible images (discrete data) with mass function <span class="math inline">{\color{blue}{q(x_0)}}.</span> When this discrete data large, <span class="math inline">q(x_0)\approx q_{\text{want}}(x_0)</span> in some sense of distribution. <strong>Our goal</strong> is to find a density <span class="math inline">p(x_0)</span> of <span class="math inline">X_0</span> such that <span class="math inline">p(x_0)\approx q_{\text{want}}(x_0)</span> in some sense of distribution.</p>
+<section id="forward-process" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="forward-process"><span class="header-section-number">2.1</span> Forward process</h2>
+<p>TODO: Notation</p>
+<p>In the forward process, we add noise independently to the image. Note that adding noise independently is equivalent to the Markov property (see <a href="#sec-markov-equivalent" class="quarto-xref">Section&nbsp;5.1</a>). We define the <strong>forward process</strong> <span class="math inline">\bigl( \lbrace X_0,\cdots,X_T\rbrace,\mathbf{Q} \bigr)</span> as a Markov chain with</p>
+<ul>
+<li>the initial density <span class="math inline">q(x_0),</span> and</li>
+<li>the transition density <span class="math display">
+\begin{aligned}
+  q(x_t\vert x_{t-1}) = \mathcal{N} (\sqrt{\alpha_t}x_{t-1},\beta_t \mathbf{I}).
+\end{aligned}
+</span></li>
+</ul>
+<p>By the Markov property, the joint density of <span class="math inline">(X_T, X_{T-1},\cdots, X_1, X_0)</span> for the forward process (or we say under <span class="math inline">\mathbf{Q}</span>) is <span class="math display">
+\begin{aligned}
+  q(x_{T:0}) = q(x_T\vert x_{T-1}) \cdot q(x_{T-1}\vert x_{T-2}) \cdots q(x_{1}\vert x_0) \cdot q(x_0).
+\end{aligned}
+</span> Recall that <span class="math inline">X_t = \sqrt{\alpha_{t}}X_{t-1} + \sqrt{\beta_t}\mathcal{E}_t.</span> Then under <span class="math inline">\mathbf{Q},</span> <span class="math inline">\underline{\mathcal{E}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})}</span> and <span class="math display">
+\begin{aligned}
+  \underline{X_0,\mathcal{E}_1,\mathcal{E}_2,\cdots,\mathcal{E}_t\text{ are independent}}
+\end{aligned}
+</span> (see TODO: appendix). Define a random vector <span class="math inline">\overline{\mathcal{E}}_t</span> by <span id="eq-Xt-X0-Et"><span class="math display">
+\begin{aligned}
+  X_t = \sqrt{\overline{\alpha}_t}X_0 + \sqrt{1-\overline{\alpha}_t} \cdot \overline{\mathcal{E}}_t,
+\end{aligned}
+\tag{1}</span></span> where <span class="math inline">\overline{\alpha}_t = \alpha_t\cdot \alpha_{t-1}\cdots \alpha_1.</span> Then under <span class="math inline">\mathbf{Q},</span> <span class="math inline">\underline{\overline{\mathcal{E}}_t\perp X_0}</span> and <span class="math inline">\underline{\overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})}.</span> This implies that <span class="math inline">X_T</span> converges in distribution to <span class="math inline">\mathcal{N}(\mathbf{0},\mathbf{I})</span> under <span class="math inline">\mathbf{Q}</span> for <span class="math inline">T</span> large.</p>
+<p><a href="#eq-Xt-X0-Et" class="quarto-xref">Equation&nbsp;1</a> is a important relation between <span class="math inline">X_t</span> and <span class="math inline">X_0</span> and the noise <span class="math inline">\overline{\mathcal{E}}_t.</span> For example, if we have an estimator of <span class="math inline">\overline{\mathcal{E}}_t,</span> say <span class="math inline">\widehat{\overline{\mathcal{E}_t}},</span> then by this relationship, we have an estimator <span class="math inline">\widehat{X}_0 = \widehat{X}_0\Bigl(X_t,\widehat{\overline{\mathcal{E}_t}}\Bigr)</span> of <span class="math inline">X_0</span> satisfies the following: <span id="eq-estimator-X0"><span class="math display">
+\begin{aligned}
+  X_t = \sqrt{\overline{\alpha}_t} \widehat{X}_0 + \sqrt{1-\overline{\alpha}_t} \cdot \widehat{\overline{\mathcal{E}_t}}.
+\end{aligned}
+\tag{2}</span></span> We will use this relationship when we reparameterize our model.</p>
+</section>
+<section id="backward-process" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="backward-process"><span class="header-section-number">2.2</span> Backward process</h2>
+<p>In the backward process, we remove the noise according to the current image. This can also be described by the Markov chain. Ideally we define the <strong>backward process</strong> <span class="math inline">\bigl( \lbrace X_T,X_{T-1},\cdots,X_1,X_0 \rbrace, \mathbf{P} \bigr)</span> as a Markov chain with the initial distribution <span class="math inline">p(x_T) = \mathcal{N}(\mathbf{0},\mathbf{I})</span> and the transition density <span class="math inline">p(x_{t-1}\vert x_t)=q(x_{t-1}\vert x_t).</span> In this assumption, we have <span class="math inline">p(x_0)\approx q(x_0)</span> in some sense of distribution (see TODO: appendix). We may sample <span class="math inline">x_0\sim p(x_0)</span> by the following:</p>
+<ul>
+<li>Sample <span class="math inline">x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I}).</span></li>
+<li>Sample <span class="math inline">x_{t-1}\sim q(x_{t-1}\vert x_t)</span> inductively for <span class="math inline">t=T,T-1,\cdots,1.</span></li>
+</ul>
+<p>However, there is a problem with the sampling above. Although from the properties of conditional density, we have <span class="math display">
+\begin{aligned}
+  q(x_{t-1}\vert x_t) = \frac{q(x_{t-1})}{q(x_t)} \cdot q(x_t\vert x_{t-1}).
+\end{aligned}
+</span> It’s not easy to use this formula to sample <span class="math inline">x_{t-1}\sim q(x_{t-1}\vert x_t)</span> through code since the expression of <span class="math inline">q(x_{t-1})/q(x_t)</span> may be complicated. The way to solve this problem is that we assume there is another probability measure <span class="math inline">\mathbf{P}_{\theta}</span> (this is our model, which can be sampled through code). There are several methods (SDE or just Taylor’s theory, see TODO: appendix) to show that we can approximate <span class="math inline">q(x_{t-1}\vert x_t)</span> with a normal. Hence, we construct <span class="math inline">\mathbf{P}_{\theta}</span> such that <span class="math display">
+\begin{aligned}
+  p_{\theta}(x_{t-1}\vert x_t) = \mathcal{N}\bigl(x_{t-1}; \mu_{\theta}(x_t,t),\Sigma_{\theta}(x_t,t)\bigr),
+\end{aligned}
+</span> where <span class="math inline">\mu_{\theta},\, \Sigma_{\theta}</span> is what we need to give. A way to construct <span class="math inline">\mathbf{P}_{\theta}</span> is that we consider <span class="math inline">\bigl( \lbrace X_T,X_{T-1},\cdots, X_1,X_0\rbrace,\mathbf{P}_{\theta} \bigr)</span> is a Markov chain with</p>
+<ul>
+<li>the initial density <span class="math inline">p_{\theta}(x_T) = \mathcal{N}(\mathbf{0},\mathbf{I})</span> and</li>
+<li>the transition density <span class="math display">
+\begin{aligned}
+  \color{blue}{p_{\theta}(x_{t-1}\vert x_t) = \mathcal{N}\bigl(x_{t-1}; \mu_{\theta}(x_t,t),\Sigma_{\theta}(x_t,t)\bigr).}
+\end{aligned}
+</span></li>
+</ul>
+<p>The joint density of <span class="math inline">X_{0:T}</span> (under <span class="math inline">\mathbf{P}_{\theta}</span>) is, by the Markov property, <span class="math display">
+\begin{aligned}
+  p_{\theta}(x_{0:T}) = p_{\theta}(x_0 \vert x_1) \cdot p_{\theta}(x_1\vert x_2) \cdots p_{\theta}(x_{T-1}\vert x_T) \cdot p(x_T).
+\end{aligned}
+</span> We can sample <span class="math inline">x_0\sim p_{\theta}(x_0)</span> by the following:</p>
+<ul>
+<li>Sample <span class="math inline">x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I}).</span></li>
+<li>Sample <span class="math inline">x_{t-1}\sim p_{\theta}(x_{t-1}\vert x_t)</span> inductively for <span class="math inline">t=T,T-1,\cdots,1.</span></li>
+</ul>
+<p>Now <strong>our goal</strong> becomes to optimize <span class="math inline">\theta</span> such that <span class="math inline">p_{\theta}(x_0)\approx q(x_0)</span> in some sense. A common way to measure the difference between <span class="math inline">p_{\theta}(x_0)</span> and <span class="math inline">q(x_0)</span> is the <a href="https://en.wikipedia.org/wiki/Kullback–Leibler_divergence">KL-divergence</a> <span class="math display">
+\begin{aligned}
+  D_{\mathtt{KL}} \bigl( q(x_0) \Vert p_{\theta}(x_0) \bigr)
+  = \int_{x_0\in \mathbb R^n} q(x_0) \log \frac{q(x_0)}{p_{\theta}(x_0)} \mathrm{d}x_0.
+\end{aligned}
+</span> By the definition of the KL-divergence, <span class="math display">
+\begin{aligned}
+\mu_{\theta}^*, \Sigma_{\theta}^*
+&amp;= \arg \min_{\mu_{\theta},\Sigma_{\theta}} D_{\mathtt{KL}} \bigl( q(x_0) \big\Vert p_{\theta}(x_0) \bigr) \cr
+&amp;= \arg \min_{\mu_\theta,\Sigma_\theta} \biggl( -\int q(x_0) \log \Bigl( \frac{p_{\theta}(x_0)}{q(x_0)} \Bigr) \mathrm{d}x_0 \biggr) \cr
+&amp;= \arg \min_{\mu_{\theta},\Sigma_{\theta}} \biggl( \underbrace{-\int q(x_0) \log p_{\theta}(x_0) \mathrm{d}x_0}_{\color{blue}{\mathbb E_{X_0\sim q(x_0)}[-\log p_{\theta}(X_0)]}} \biggr).
+\end{aligned}
+</span> Through the <a href="https://en.wikipedia.org/wiki/Evidence_lower_bound">evidence lower bound(ELBO)</a>, <span class="math display">
+\begin{aligned}
+  {\color{blue}{\mathbb E_{X_0\sim q(x_0)}[-\log p_{\theta}(X_0)]}} \leq
+  \mathbb E_{X_{0:T}\sim q(x_{0:T})} \Bigl[ -\log \frac{p_{\theta}(X_{0:T})}{q(X_{1:T}\vert X_0)} \Bigr]:= L.
+\end{aligned}
+</span> Our goal becomes to minimize <span class="math inline">L.</span> We separate <span class="math inline">L</span> into three parts (for details, see TODO: appendix): <span id="eq-decom-L"><span class="math display">
+\begin{aligned}
+  L
+  &amp;= \underbrace{\mathbb E_{X_0\sim q(x_0)} \biggl[ D_{\mathtt{KL}} \Bigl( \underline{q(x_T \vert x_0)} \big\Vert \underline{p(x_T)} \Bigr) \Big\vert_{x_0=X_0} \biggr]}_{L_T} \cr
+  &amp; \qquad + \sum_{t=2}^T
+  \underbrace{\mathbb E_{X_0,X_t\sim q(x_0,x_{t})} \biggl[
+    D_{\mathtt{KL}} \Bigl(
+            {\underline{\color{red}{q(x_{t-1} \vert x_t,x_0)}}}
+            \big\Vert
+            \underline{\color{blue}{p_{\theta}(x_{t-1}\vert x_t)} }
+            \Bigr)\Big \vert_{x_0,x_t=X_0,X_t}
+    \biggr]}_{L_{t-1}}  \cr
+    &amp; \qquad \qquad + \underbrace{\mathbb E_{X_0,X_1\sim q(x_0,x_1)} \biggl[
+      -\log {\color{blue}{p_{\theta}(x_0 \vert x_1)}} \Big\vert_{x_0,x_1=X_0,X_1}
+      \biggr]}_{L_0}.
+\end{aligned}
+\tag{3}</span></span></p>
+<ul>
+<li><p>The first term <span class="math inline">L_T</span> controls how similar is the last image of the forward process to the pure noise. <span class="math inline">L_T</span> can be calculated directly since both <span class="math inline">q(x_T \vert x_0),\, p(x_T)</span> are normal. The value is <span class="math display">
+\begin{aligned}
+  L_T = \frac{1}{2} \biggl( \log (1-\overline{\alpha}_T) + n \Bigl( \frac{1}{1-\overline{\alpha}_T} - 1 \Bigr) + \frac{\overline{\alpha}_T}{1-\overline{\alpha}_T} \mathbb E_{X_0\sim q(x_0)}\bigl[ \left\lVert X_0 \right\rVert^2 \bigr] \biggr).
+\end{aligned}
+</span> It is clear that <span class="math inline">\lim_{T\rightarrow\infty} L_t = 0.</span> From the above formula, depending only on the <span class="math inline">L^2</span>-norm of <span class="math inline">X_0,</span> <span class="math inline">L_T</span> can be smaller if we shift <span class="math inline">X_0</span> by its mean. We may see the case <span class="math inline">n=1.</span> TODO: 圖 For the question of how to choose the size of <span class="math inline">T</span>, see TODO: ref.</p></li>
+<li><p>The second term <span class="math inline">L_{t-1},</span> <span class="math inline">t=2,\cdots,T,</span> is the most important since it determines how to choose <span class="math inline">\mu_{\theta},\Sigma_{\theta}.</span> This term controls the similarity of <span class="math inline">X_{t-1}</span> in the forward and backward process. By Bayes’ rule and after a long calculation (see TODO: appendix), <span class="math display">
+\begin{aligned}
+  {\color{red}{q(x_{t-1} \vert x_t,x_0)}} = \mathcal{N}\bigl( x_{t-1}; \mu_{t}(x_t,x_0),\Sigma_t \bigr),
+  \quad t = 2,\cdots,T,
+\end{aligned}
+</span> where <span id="eq-mu_t"><span class="math display">
+\begin{aligned}
+  \mu_{t}(x_t,x_0)  
+  = \frac{\sqrt{\alpha_t}(1-\overline{\alpha}_{t-1})}{1-\overline{\alpha}_t}x_t + \frac{\sqrt{\overline{\alpha}_{t-1}}\beta_t}{1-\overline{\alpha}_t}x_0 ,
+  \quad
+  \Sigma_t = \frac{1-\overline{\alpha}_{t-1}}{1-\overline{\alpha}_t}\beta_t \mathbf{I}.
+\end{aligned}
+\tag{4}</span></span></p>
+<h3 id="to-determine-sigma_theta-for-tgeq-2" data-number="2.2.1" class="anchored"><span class="header-section-number">2.2.1</span> To determine <span class="math inline">\Sigma_{\theta}</span> for <span class="math inline">t\geq 2</span></h3>
+<p>Since both <span class="math inline">q(x_{t-1}\vert x_t, x_0),\, p_{\theta}(x_{t-1}\vert x_t)</span> are normal, it is natural to choose <span id="eq-Sig_the_indep_x"><span class="math display">
+\begin{aligned}
+  \Sigma_{\theta}(x,t) =
+  \Sigma_t &amp;= \frac{1-\overline{\alpha}_{t-1}}{1-\overline{\alpha}_t}\beta_t \mathbf{I}
+  := {\color{blue}{\sigma_t^2}} \mathbf{I}.
+\end{aligned}
+\tag{5}</span></span></p>
+<h3 id="to-determine-mu_theta-for-tgeq-2" data-number="2.2.2" class="anchored"><span class="header-section-number">2.2.2</span> To determine <span class="math inline">\mu_{\theta}</span> for <span class="math inline">t\geq 2</span></h3>
+<p>By the choice of <span class="math inline">\Sigma_{\theta},</span> we have <span class="math display">
+\begin{aligned}
+  L_{t-1}
+  &amp;= \mathbb E_{X_0,X_t\sim q(x_0,x_t)} \Bigl[ \frac{1}{2\sigma_t^2} \bigl\lVert \mu_t(X_t,X_0) - \mu_{\theta}(X_t,t) \bigr\rVert^2 \Bigr] \cr
+  &amp;= \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \Bigl[ \frac{1}{2\sigma_t^2} \bigl\lVert \mu_t(X_t,X_0) - \mu_{\theta}(X_t,t) \bigr\rVert^2 \Bigr].
+\end{aligned}
+</span> Then we reparametrize <span class="math inline">\mu_{\theta}</span> by <span id="eq-mu_the_mu_t"><span class="math display">
+\begin{aligned}
+  \mu_{\theta}(X_t,t)=\mu_t\bigl(X_t, \widehat{X}_0\bigr),
+\end{aligned}
+\tag{6}</span></span> where <span class="math inline">\widehat{X}_0=\widehat{X}_0(X_t)</span> is the estimate of <span class="math inline">X_0</span> via our model by giving <span class="math inline">X_t</span> (we will give the details of <span class="math inline">\widehat{X}_0</span> later in <a href="#eq-Net_asssume1" class="quarto-xref">Equation&nbsp;8</a>). With this parametrization and by the expression of <span class="math inline">\mu_{t}</span> in <a href="#eq-mu_t" class="quarto-xref">Equation&nbsp;4</a>, we have <span id="eq-Net_asssume0"><span class="math display">
+\begin{aligned}
+  \bigl\lVert \mu_t(X_t,X_0) - \mu_{\theta}(X_t,t)  \bigr\rVert
+  = \frac{\sqrt{\overline{\alpha}_{t-1}}\beta_t}{1-\overline{\alpha}_t}\big\lVert X_0 - \widehat{X}_0(X_t) \big\rVert.
+\end{aligned}
+\tag{7}</span></span> Let <span class="math inline">\mathtt{Net}_{\theta}:\mathbb R^n\times \lbrace 1,2,\cdots,T\rbrace\longrightarrow \mathbb R^n</span> be our neural network (with parameters <span class="math inline">\theta</span>) we need to train. We can choose <span class="math inline">\mathtt{Net}_{\theta}</span> to predict <span class="math inline">X_0,</span> or <span class="math inline">\overline{\mathcal{E}}_t</span> or the velocity <span class="math inline">V_t</span> (see <span class="citation" data-cites="SNR">Hang et al. (<a href="#ref-SNR" role="doc-biblioref">2023</a>)</span>). DDPM chooses to predict the noise <span class="math inline">\overline{\mathcal{E}}_t.</span> Then by <a href="#eq-estimator-X0" class="quarto-xref">Equation&nbsp;2</a>, we have the following relation <span id="eq-Net_asssume1"><span class="math display">
+\begin{aligned}
+  X_t = \sqrt{\overline{\alpha}_t} \cdot \widehat{X}_0(X_t) + \sqrt{1-\overline{\alpha}_t} \cdot \mathtt{Net}_{\theta}(X_t,t).
+\end{aligned}
+\tag{8}</span></span> Note that <span class="math inline">\widehat{X}_0 = \widehat{X}_0(X_t)=\widehat{X}_0(X_t,\theta).</span> Hence, we have <span class="math display">
+\begin{aligned}
+  L_{t-1} = \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\ X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \biggl( \frac{\beta_t^2}{2\sigma_t^2\alpha_t(1-\overline{\alpha}_t)} \Big\lVert \overline{\mathcal{E}}_t - \mathtt{Net}_{\theta}(X_t,t) \Big\rVert^2 \biggr).
+\end{aligned}
+</span></p></li>
+<li><p>For the third term <span class="math inline">L_0.</span> Recall that we assume <span class="math inline">p_{\theta}(x_0 \vert x_1) = \mathcal{N}\bigl(x_0; \mu_{\theta}(x_1,1), \Sigma_{\theta}(x_1,1) \bigr).</span> For convience (see <a href="#eq-Sig_the_indep_x" class="quarto-xref">Equation&nbsp;5</a>), we choose <span class="math inline">\Sigma_{\theta}(x_1,1)</span> to be a constant matrix indepdent of <span class="math inline">\theta</span> and <span class="math inline">x_1,</span> e.g., <span class="math display">
+\begin{aligned}
+  \Sigma_{\theta}(x_1,1) = \beta_1 \mathbf{I}:={\color{blue}{\sigma_1^2}} \mathbf{I}.
+\end{aligned}
+</span> Note that <span class="math display">
+\begin{aligned}
+  -\log p_{\theta} (x_0\vert x_1) = \frac{1}{2\beta_1} \big\lVert x_0 - \mu_{\theta}(x_1,1) \big\rVert^2 + \mathtt{const} ,
+\end{aligned}
+</span> where <span class="math inline">\mathtt{const}</span> is some constant independent of <span class="math inline">(x_0,x_1,\theta).</span> Here we also reparametrize <span class="math inline">\mu_{\theta}</span> by <a href="#eq-mu_the_mu_t" class="quarto-xref">Equation&nbsp;6</a> for <span class="math inline">t=1</span> with <span class="math inline">\overline{\alpha}_0:=1.</span> In this setting, <span class="math display">
+\begin{aligned}
+  \mu_\theta(X_1,1)=\mu_1(X_1,\widehat{X}_0(X_1))=\widehat{X}_0(X_1).
+\end{aligned}
+</span> To maximize <span class="math display">
+\begin{aligned}
+  L_0
+  = \mathbb E_{X_0,X_1\sim q(x_0,x_1)} \biggl[
+    -\log {\color{blue}{p_{\theta}(x_0 \vert x_1)}} \Big\vert_{x_0,x_1=X_0,X_1}
+    \biggr]
+\end{aligned}
+</span> is equivalent to maximize <span class="math display">
+\begin{aligned}
+  L_0'=\mathbb E_{X_0,X_1\sim q(x_0,x_1)} \biggl[
+    \frac{1}{2\beta_1} \big\lVert X_0 - \widehat{X}_0(X_1) \big\rVert^2
+    \biggr].
+\end{aligned}
+</span> Hence, if we use the same assumption from <a href="#eq-Net_asssume1" class="quarto-xref">Equation&nbsp;8</a>, our goal is to minimize <span class="math display">
+\begin{aligned}
+  L_0' &amp;=  \mathbb E_{X_0,X_1\sim q(x_0,x_1)} \biggl[
+    \frac{1-\alpha_1}{2\beta_1 \alpha_1}
+    \big\lVert X_0 - \widehat{X}_0(X_1)  
+    \big\rVert^2
+    \biggr]  \cr
+    &amp;=
+    \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\ X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \biggl( \frac{\beta_t^2}{2\sigma_t^2\alpha_t(1-\overline{\alpha}_t)} \Big\lVert \overline{\mathcal{E}}_t - \mathtt{Net}_{\theta}(X_t,t) \Big\rVert^2 \biggr)
+\end{aligned}
+</span> with <span class="math inline">t=1.</span></p></li>
+</ul>
+</section>
+<section id="training-and-sampling" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="training-and-sampling"><span class="header-section-number">2.3</span> Training and Sampling</h2>
+<p>Note that we will minimize <span class="math inline">\mathbb E_{X\sim q(x)}[f_{\theta}(X)]</span> by <strong>repeating</strong> the following: <!-- **until** converge: --></p>
+<ul>
+<li>Sampling <span class="math inline">x\sim q(x)</span> and then</li>
+<li>minimizing <span class="math inline">f_{\theta}(x)</span> by taking gradient descent on <span class="math inline">\theta.</span></li>
+</ul>
+<p>Recall that for <span class="math inline">t = 2,3,\cdots,T,</span> <span class="math display">
+\begin{aligned}
+  L_{t-1} = \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\ X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \biggl( \frac{\beta_t^2}{2\sigma_t^2\alpha_t(1-\overline{\alpha}_t)} \Big\lVert \overline{\mathcal{E}}_t - \mathtt{Net}_{\theta}(X_t,t) \Big\rVert^2 \biggr).
+\end{aligned}
+</span> DDPM chooses a simple version that minimizes <span class="math inline">L_{t-1}^{\text{simple}},</span> ignoring the weights in the expectation: <span class="math display">
+\begin{aligned}
+  L_{t-1}^{\text{simple}} = \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\ X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \biggl(  \Big\lVert \overline{\mathcal{E}}_t - \mathtt{Net}_{\theta}(X_t,t) \Big\rVert^2 \biggr).
+\end{aligned}
+</span> <span class="math inline">L_0</span> is the same. Therefore, our training algorithm is as follows:</p>
+<div id="alg-test-text-style" class="pseudocode-container" data-pseudocode-index="1" data-no-end="false" data-comment-delimiter="▷" data-indent-size="1.2em" data-line-number="true" data-alg-title="Algorithm" data-line-number-punc=":">
+<div class="pseudocode">
+\begin{algorithm} \caption{Training (DDPM)} \begin{algorithmic} \Repeat\State $t\sim \text{Uniform}(\lbrace 1,\cdots,T \rbrace)$\Comment{ Sample random step}\State $x_0\sim q(x_0)$\Comment{ Sample random initial image}\State $\overline{\varepsilon}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})$\Comment{ Sample random noise}\State $x_t = \sqrt{\overline{\alpha}_t}x_0 + \sqrt{1-\overline{\alpha}_t}\cdot \overline{\varepsilon}_t$\State Take gradient descent step on $\Bigl\lVert \overline{\varepsilon}_t - \mathtt{Net}_{\theta}(x_t,t) \Bigr\rVert^2$\Comment{ Optimization}\Until{ converged} \end{algorithmic} \end{algorithm}
+</div>
+</div>
+<p>For the sampling, we may sample <span class="math inline">x_0\sim p_{\theta}(x_0)</span> by the following:</p>
+<ul>
+<li>Sample <span class="math inline">x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I}).</span></li>
+<li>Sample <span class="math inline">x_{t-1}\sim p_{\theta}(x_{t-1}\vert x_t)</span> inductively for <span class="math inline">t=T,T-1,\cdots,1.</span></li>
+</ul>
+<p>Recall that <span class="math inline">p_{\theta}(x_{t-1}\vert x_t)\sim \mathcal{N}(\mu_{\theta}(x_t,t),\sigma_t \mathbf{I}),</span> where <span class="math display">
+\begin{aligned}
+  \mu_{\theta} (x_t,t) = \frac{1}{\sqrt{\alpha_t}} \Bigl(
+    x_t - \frac{\beta_t}{\sqrt{1-\overline{\alpha}_t}} \mathtt{Net}_{\theta} (x_t,t)
+    \Bigr).
+\end{aligned}
+</span></p>
+<p>Therefore, our sampling algorithm is as follows:</p>
+<div id="alg-diffusion-model-sampling-shortly" class="pseudocode-container" data-pseudocode-index="2" data-no-end="false" data-comment-delimiter="▷" data-indent-size="1.2em" data-line-number="true" data-alg-title="Algorithm" data-line-number-punc=":">
+<div class="pseudocode">
+\begin{algorithm} \caption{Sampling (DDPM)} \begin{algorithmic} \State $x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I})$\For{ $t=T,\cdots,1$}\If{ $t&gt;1$}\State $z \sim \mathcal{N}(\mathbf{0},\mathbf{I})$\Else\State $z= \mathbf{0}$\EndIf\State $x_{t-1}=\frac{1}{\sqrt{\alpha_t}}\Big(x_t-\frac{1-\alpha_t}{\sqrt{1-\overline{\alpha}_t}}\mathtt{Net}_{\theta}(x_t,t)\Big)+\sigma_t z$\EndFor\Return $x_0$ \end{algorithmic} \end{algorithm}
+</div>
+</div>
+</section>
+<section id="sec-DDIM" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="sec-DDIM"><span class="header-section-number">2.4</span> DDIM</h2>
+<p>One of the major drawbacks of DDPM is the lengthy time required for data generation, especially when compared to other generative AI methods. In response to this issue, an improved version of DDPM, known as Denoising Diffusion Implicit Models (DDIM), was introduced by Song et al.&nbsp;(<span class="citation" data-cites="song2022denoising">Song, Meng, and Ermon (<a href="#ref-song2022denoising" role="doc-biblioref">2022</a>)</span>). The primary innovation of DDIM is its ability to significantly accelerate the data generation process. By refining the underlying diffusion mechanism, DDIM reduces the number of required diffusion steps without sacrificing the quality of the generated data. This breakthrough makes DDIM a more practical and efficient alternative for generative AI tasks, offering faster performance while maintaining high-quality outputs.</p>
+<p>Now we introduce the DDIM. The main reason why we can decompose <span class="math inline">L</span> in <a href="#eq-decom-L" class="quarto-xref">Equation&nbsp;3</a> in DDPM is that we have the following production of two densities: <span id="eq-q_prod"><span class="math display">
+\begin{aligned}
+  p_{\theta}(x_{0:T}) &amp;= p_{\theta}(x_T) \cdot \prod_{t=2}^T p_{\theta}(x_{t-1}\vert x_t) \cdot  p_{\theta}(x_0\vert x_1) , \cr
+  q(x_{1:T}\vert x_0) &amp;= q(x_T\vert x_0) \cdot \prod_{t=2}^{T} q(x_{t-1} \vert x_{t}, x_0).
+\end{aligned}
+\tag{9}</span></span> DDIM consider a new forward process <span class="math inline">\bigl( \lbrace X_0,X_1,\cdots,X_T\rbrace, \mathbf{Q}_{\sigma} \bigr),</span> where <span class="math inline">\mathbf{Q}_{\sigma}</span> is some probability measure indexed by <span class="math inline">\sigma\in [0,\infty)^T</span>. The forward process is not a Markov chain but has the same conditional density of <span class="math inline">X_{t}</span> given <span class="math inline">X_0=x_0</span> for each <span class="math inline">t</span> as DDPM. Inspired by <a href="#eq-q_prod" class="quarto-xref">Equation&nbsp;9</a>, DDIM directly defines the joint density <span class="math display">
+\begin{aligned}
+  q_{\sigma}(x_{0:T}) := q_{\sigma}(x_T\vert x_0) \cdot \prod_{t=2}^T q_{\sigma}(x_{t-1}\vert x_t, x_0) \cdot q(x_0),
+\end{aligned}
+</span> where <span class="math inline">q_{\sigma}(x_T\vert x_0):=\mathcal{N}(\sqrt{\overline{\alpha}_T}x_0,(1-\overline{\alpha}_T)\mathbf{I})</span> and <span class="math display">
+\begin{aligned}
+  q_{\sigma} (x_{t-1}\vert x_t,x_0) := \mathcal{N}\biggl( \sqrt{\overline{\alpha}_{t-1}}x_0 + \sqrt{1-\overline{\alpha}_{t-1} - \sigma_t^2} \cdot \frac{x_t-\sqrt{\overline{\alpha}_t}x_0}{\sqrt{1-\overline{\alpha}_t}} , \sigma_t^2 \mathbf{I} \biggr), \quad t=2,\cdots, T.
+\end{aligned}
+</span> Note that <span class="math inline">q_{\sigma}(x_{0:T})</span> is a density since it is a product of densities. This seems a little weird that the joint density of <span class="math inline">q_{\sigma}(x_{0:T})</span> is determined by some conditional density. In fact, <span class="math inline">\bigl(\lbrace X_0,X_1,\cdots,X_T \rbrace,\mathbf{Q}_{\sigma}\bigr)</span> is a process satisfying the following conditions:</p>
+<ol type="1">
+<li>Under <span class="math inline">\mathbf{Q}_{\sigma},</span> <span class="math inline">X_0</span> has the density <span class="math inline">q(x_0).</span></li>
+<li>Conditioned on <span class="math inline">X_0=x_0,</span> the process <span class="math inline">\Bigl( \lbrace X_T,X_{T-1},\cdots, X_2,X_1\rbrace\Big\vert_{X_0=x_0}, \mathbf{Q}_{\sigma} \Bigr)</span> is a Markov chain with
+<ul>
+<li>the initial density <span class="math inline">q_{\sigma}(x_T\vert x_0)= \mathcal{N}(\sqrt{\overline{\alpha}_T}x_0,(1-\overline{\alpha}_T)\mathbf{I})</span> and</li>
+<li>the transition density <span class="math display">
+\begin{aligned}
+   q_{\sigma} (x_{t-1}\vert x_t,x_0) = \mathcal{N}\biggl( \sqrt{\overline{\alpha}_{t-1}}x_0 + \sqrt{1-\overline{\alpha}_{t-1} - \sigma_t^2} \cdot \frac{x_t-\sqrt{\overline{\alpha}_t}x_0}{\sqrt{1-\overline{\alpha}_t}} , \sigma_t^2 \mathbf{I} \biggr), \quad t=2,\cdots, T.
+\end{aligned}
+</span></li>
+</ul>
+Note that if we write <span class="math inline">q_{\sigma}(x_{t-1}\vert x_t,x_0)=\mathcal{N} \bigl(f(x_t,x_0,t), \sigma_t^2 \mathbf{I}\bigr),</span> then the process <span class="math inline">\Bigl( \lbrace X_T,X_{T-1},\cdots, X_2,X_1\rbrace\Big\vert_{X_0=x_0}, \mathbf{Q}_{\sigma} \Bigr)</span> can be write as, conditioned on <span class="math inline">X_0=x_0,</span> <span class="math display">
+\begin{aligned}
+  X_{t-1} = f(X_t,x_0,t) + \sigma_t \xi_t, \quad t=T,\cdots, 2,
+\end{aligned}
+</span> where <span class="math inline">X_T,\xi_{T-1},\xi_{T-2},\cdots, \xi_{1}</span> are independent under <span class="math inline">\mathbf{Q}_{\sigma}.</span></li>
+</ol>
+<p>For each <span class="math inline">\sigma\in [0,\infty)^T,</span> we can show that for this joint density <span class="math inline">q_{\sigma}(x_{0:T}),</span> <span class="math display">
+\begin{aligned}
+  q_{\sigma}(x_0) &amp;= q(x_0), \cr
+  q_{\sigma} (x_t \vert x_0) &amp;= \mathcal{N} \bigl(\sqrt{\overline{\alpha}_t}x_0, (1-\overline{\alpha}_t)\mathbf{I}\bigr) = q(x_t\vert x_0) , \quad t=1,\cdots,T.
+\end{aligned}
+</span> DDIM consider the backward process <span class="math inline">\bigl( \lbrace X_T,X_{T-1},\cdots,X_1,X_0 \rbrace, \mathbf{P}_{\theta} \bigr)</span> as a Markov chain with the initial distribution <span class="math inline">p_{\theta}({x_T})=\mathcal{N}(\mathbf{0},\mathbf{I})</span> and the transition density <span class="math display">
+\begin{aligned}
+  p_{\theta}(x_0\vert x_1) &amp;= \mathcal{N}( {\color{blue}{\widehat{x}_0(x_1,1)}}, \sigma_1^2 \mathbf{I} )  , \cr
+  p_{\theta}(x_{t-1}\vert x_t) &amp;= q_{\sigma}(x_{t-1}\vert x_t,{\color{blue}{\widehat{x}_0}}) \cr
+  &amp;= \mathcal{N}\biggl( \sqrt{\overline{\alpha}_{t-1}}{\color{blue}{\widehat{x}_0}} + \sqrt{1-\overline{\alpha}_{t-1} - \sigma_t^2} \cdot \frac{x_t-\sqrt{\overline{\alpha}_t}{\color{blue}{\widehat{x}_0}}}{\sqrt{1-\overline{\alpha}_t}} , \sigma_t^2 \mathbf{I} \biggr), \quad t=2,\cdots, T,
+\end{aligned}
+</span> where <span class="math inline">{\color{blue}{\widehat{x}_0}}=\widehat{x}_0(x_t,t)</span> satisfies <span class="math display">
+\begin{aligned}
+  x_t = \sqrt{\overline{\alpha}_t}\cdot \widehat{x}_0 (x_t,t) + \sqrt{1-\overline{\alpha}_t} \cdot \mathtt{Net}_{\theta}(x_t,t), \quad x\in \mathbb R^n,\, t\in \mathbb N.
+\end{aligned}
+</span> By the constructions of <span class="math inline">q_{\sigma},p_{\theta},</span> we still have the decomposition <span class="math display">
+\begin{aligned}
+  &amp;\mathbb E_{X_{0:T}\sim q_{\sigma}(x_{0:T})} \Bigl[ -\log \frac{p_{\theta}(X_{0:T})}{q_{\sigma}(X_{1:T}\vert X_0)} \Bigr] \cr  
+  &amp;= \underbrace{\mathbb E_{X_0\sim q_{\sigma}(x_0)} \biggl[ D_{\mathtt{KL}} \Bigl( \underline{q_{\sigma}(x_T \vert x_0)} \big\Vert \underline{p(x_T)} \Bigr) \Big\vert_{x_0=X_0} \biggr]}_{L_T} \cr
+  &amp; \qquad + \sum_{t=2}^T
+  \underbrace{\mathbb E_{X_0,X_t\sim q_{\sigma}(x_0,x_{t})} \biggl[
+    D_{\mathtt{KL}} \Bigl(
+            {\underline{\color{red}{q_{\sigma}(x_{t-1} \vert x_t,x_0)}}}
+            \big\Vert
+            \underline{\color{blue}{p_{\theta}(x_{t-1}\vert x_t)} }
+            \Bigr)\Big \vert_{x_0,x_t=X_0,X_t}
+    \biggr]}_{L_{t-1}}  \cr
+    &amp; \qquad \qquad + \underbrace{\mathbb E_{X_0,X_1\sim q_{\sigma}(x_0,x_1)} \biggl[
+      -\log {\color{blue}{p_{\theta}(x_0 \vert x_1)}} \Big\vert_{x_0,x_1=X_0,X_1}
+      \biggr]}_{L_0}.
+\end{aligned}
+</span> There are two special values for <span class="math inline">\sigma.</span></p>
+<ul>
+<li><p>The first one is <span class="math display">
+\begin{aligned}
+  \sigma_t = \sqrt{(1-\overline{\alpha}_{t-1})/(1-\overline{\alpha}_t)} \sqrt{ 1-\alpha_t }, \quad t = 1,\cdots, T.
+\end{aligned}
+</span> Under this <span class="math inline">\sigma,</span> the process <span class="math inline">\bigl(\lbrace X_0,X_1,\cdots,X_T \rbrace,\mathbf{Q}_{\sigma}\bigr)</span> becomes a Markov chain, hence the DDIM becomes the original DDPM.</p></li>
+<li><p>The second one is <span class="math inline">\sigma_t = 0</span> for <span class="math inline">t=1,2,\cdots, T.</span> In this case, the backward process <span class="math inline">\bigl(\lbrace X_T,X_{T-1},\cdots,X_0 \rbrace,\mathbf{P}_{\theta}\bigr)</span> becomes deterministic when we condition on <span class="math inline">X_T = x_T.</span> This greatly speeds up the sampling of diffusion models. In this case, we may write <span class="math display">
+\begin{aligned}
+  X_{t-1} = \sqrt{\overline{\alpha}_{t-1}} \widehat{X}_0 (X_t,t)  +  \sqrt{1-\overline{\alpha}_{t-1}} \cdot \mathtt{Net}_{\theta}(X_t,t), \quad t=T,T-1,\cdots, 1.
+\end{aligned}
+</span></p></li>
+</ul>
+</section>
+<section id="sec-cdm" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="sec-cdm"><span class="header-section-number">2.5</span> Conditional Diffusion Model</h2>
+<p><span class="citation" data-cites="dhariwal2021diffusion">Dhariwal and Nichol (<a href="#ref-dhariwal2021diffusion" role="doc-biblioref">2021</a>)</span></p>
+<ul>
+<li><p>一般沒有限定條件的 diffusion model，我們無法去控制想生成的東西。這明顯無法滿足我們的需求。 比如說在 mnist 之中，我們想要去控制生成 0~9 的是哪個數字。 又比如說 celebA 這資料集中，我們想要去生成的大頭像有什麼特徵（比如說是男是女，有無戴眼鏡）。 所以自然而然會有所謂的 Conditional diffusion model。</p></li>
+<li><p>我們先從簡單類別的說起，用 mnist 的數字來解釋。 我們現在有資料集 <span class="math inline">X \times Y</span> 的分佈 <span class="math display">
+\begin{aligned}
+  \widehat{q}(x_0,y), \quad x_0 \in \mathbb R^{w\times h}, \quad y\in \mathbb R^n,
+\end{aligned}
+</span> where</p>
+<ul>
+<li><span class="math inline">X_0</span> 是數字圖片;</li>
+<li><span class="math inline">Y</span> 是數字 label 在 <span class="math inline">\mathbb R^n</span> 的 embed
+<ul>
+<li>That is, <span class="math inline">\mathbb R^n</span> is the embed space of labels.</li>
+<li>For this example, <span class="math inline">0,1,\cdots, 9</span> are <code>nn.Embedding(10,n)(torch.arange(10))</code>. （所以這裡 embed 也是要可學習的）。</li>
+</ul></li>
+</ul></li>
+<li><p>Given <span class="math inline">Y = y.</span> We want to generate an image <span class="math inline">x_0</span> that has the label <span class="math inline">y.</span></p></li>
+<li><p>Assume that we already have <span class="math inline">\widehat{q}(y\vert x_0).</span> That is, when we have <span class="math inline">x_0,</span> we know the distribution of labels of <span class="math inline">x_0.</span></p></li>
+<li><p>如果忽略掉 <span class="math inline">Y,</span> 只看 <span class="math inline">X_0,</span> 可視為之前的 unconditional diffusion model</p></li>
+<li><p>We define <span class="math inline">q</span> as before:</p>
+<ul>
+<li><span class="math inline">q(x_0)</span>: the distribution of <span class="math inline">X_0</span> (無表達式);</li>
+<li><span class="math inline">q(x_t\vert x_{t-1})= \mathcal{N}(\sqrt{\alpha_t}x_{t-1}, (1-\alpha_t)\mathbf{I}).</span></li>
+</ul></li>
+<li><p>同樣地我們令 <span class="math inline">\lbrace X_t \rbrace_{t=0}^T</span> 為時間 <span class="math inline">t</span> 時的加噪圖片, 只是加噪方式是如下:</p>
+<p><strong>Define</strong> the forward process of <span class="math inline">(X_{0:T},Y)</span> by the following:</p>
+<ul>
+<li><span class="math inline">\widehat{q}(x_0):= q(x_0)</span> (無表達式) (eq 28).
+<ul>
+<li>So that we have <span class="math inline">\widehat{q}(x_0,y)=\underbrace{q(x_0)}_{\text{無表達式}} \cdot \underbrace{\widehat{q}(y\vert x_0)}_{\text{有表達式}}.</span></li>
+</ul></li>
+<li><span class="math inline">\widehat{q}(x_t\vert x_{t-1},y):= q(x_{t}\vert x_{t-1})</span> (有表達式) (eq 30);</li>
+<li><span class="math inline">\widehat{q}(x_{1:T}\vert x_0,y):= \prod_{t=1}^T \widehat{q}(x_t\vert x_{t-1},y)</span> (eq 31).</li>
+</ul>
+<p>Note that <span class="math display">
+\begin{aligned}
+  \widehat{q}(x_{0:T},y)
+  &amp;= \widehat{q}(x_0,y) \cdot \widehat{q}(x_{1:T}\vert x_0,y), \cr
+  &amp;= \widehat{q}(x_0,y) \cdot \prod_{t=1}^T \widehat{q}(x_t\vert x_{t-1},y).
+\end{aligned}
+</span></p></li>
+<li><p>For this <span class="math inline">\widehat{q},</span> we have</p>
+<ul>
+<li><span class="math inline">\widehat{q}(x_{t}\vert x_{t-1})=\widehat{q}(x_{t}\vert x_{t-1},y)</span> (eq 32~37) <span class="math inline">= q(x_t\vert x_{t-1})</span> (eq 30);</li>
+<li><span class="math inline">\widehat{q}(x_{1:T}\vert x_0)= q(x_{1:T}\vert x_0)</span> (eq 38~44);</li>
+<li><span class="math inline">\widehat{q}(x_t)=q(x_t)</span> (eq 45~50);</li>
+<li><span class="math inline">\widehat{q}(x_{t-1}\vert x_{t}) = q(x_{t-1}\vert x_{t})</span>;</li>
+<li>(上面四點說明 <span class="math inline">\widehat{q}</span> 在不考慮 label 時, 跟之前的 diffusion model <span class="math inline">q</span> 分佈完全一樣);</li>
+<li><span class="math inline">\widehat{q}(y\vert x_{t-1},x_{t}) = \widehat{q}(y\vert x_{t-1})</span> (eq 51~54);</li>
+<li><span class="math inline">\widehat{q}(x_{t-1}\vert x_{t},y) = \underbrace{q(x_{t-1}\vert x_{t})}_{\approx p_{\theta}(x_{t-1}\vert x_{t})} \cdot \underbrace{\widehat{q}(y\vert x_{t-1})}_{\approx p_{\phi}(y\vert x_{t-1})} \Big/ \underbrace{\widehat{q}(y\vert x_{t})}_{\text{constant}}</span> (eq 55~61).
+<ul>
+<li>Note that <span class="math inline">p_{\phi}(y\vert x_t)</span> 是 <span class="math inline">p_{\phi}(y\vert x_t,t)</span> 的縮寫.</li>
+<li>Note that <span class="math inline">p_{\theta}(x_{t-1}\vert x_{t}), p_{\phi}(y\vert x_{t-1})</span> is our model.
+<ul>
+<li>這裡可以使用已經訓練好的 <span class="math inline">p_{\theta}</span> (純粹DDPM的) 和 分類器.</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+<!-- 
+## SNR
+
+Efficient Diffusion Training via Min-SNR Weighting Strategy 
+-->
+</section>
+<section id="predict-velocity" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="predict-velocity"><span class="header-section-number">2.6</span> Predict Velocity</h2>
+<p>We have two predictions in the following.</p>
+<ul>
+<li><p>The first is to predict the initial image <span class="math inline">X_0</span> by giving <span class="math inline">X_t.</span> We set <span class="math display">
+\begin{aligned}
+  \mu_{\theta}(x_t,t)
+  &amp;= \mu_t \Bigl( x_t, \mathtt{Net}_{\theta}(x_t,t) \Bigr) \cr
+  &amp;= \frac{\sqrt{\alpha_t}(1-\overline{\alpha}_{t-1})}{1-\overline{\alpha}_t}x_t + \frac{\sqrt{\overline{\alpha}_{t-1}}\beta_t}{1-\overline{\alpha}_t} \cdot \mathtt{Net}_{\theta}(x_t,t) , \quad x_t \in \mathbb R^n,\, t=2, \cdots, T,
+\end{aligned}
+</span> and then <span class="math display">
+\begin{aligned}
+  \Bigl\lVert \mu_t(x_t,x_0)- \mu_{\theta}(x_t,t) \Bigr\rVert
+  = \frac{\sqrt{\overline{\alpha}_{t-1}}\beta_t}{1-\overline{\alpha}_t} \Bigl\lVert  x_0 - \mathtt{Net}_{\theta}(x_t,t) \Bigr\rVert.
+\end{aligned}
+</span></p></li>
+<li><p>The second is to predict the noise <span class="math inline">\overline{\varepsilon}_t</span> by giving <span class="math inline">x_t,t.</span> We set <span class="math display">
+\begin{aligned}
+  \mu_{\theta}(x_t,t)
+  &amp;= \widetilde{\mu}_t \Bigl( x_t, \mathtt{Net}_{\theta}(x_t,t) \Bigr)  \cr
+  &amp;= \frac{1}{\sqrt{\alpha_t}} \Bigl(
+    x_t - \frac{\beta_t}{\sqrt{1-\overline{\alpha}_t}} \cdot \mathtt{Net}_{\theta}(x_t,t)
+  \Bigr) , \quad x_t \in \mathbb R^n,\, t=2,\cdots, T,
+\end{aligned}
+</span> and then <span class="math display">
+\begin{aligned}
+  \Bigl\lVert \mu_t(x_t,x_0)- \mu_{\theta}(x_t,t) \Bigr\rVert =  \frac{\beta_t}{\sqrt{\alpha_t}\cdot \sqrt{1-\overline{\alpha}_t}} \Bigl\lVert \overline{\varepsilon}_t - \mathtt{Net}_{\theta}(x_t,t)  \Bigr\rVert.
+\end{aligned}
+</span></p></li>
+</ul>
+<p>In the backward process, we predict the noise <span class="math inline">\overline{\mathcal{E}}_t</span> or the initial image <span class="math inline">X_0.</span> There is another prediction (prediction for the velocity, see TODO: pred_v). For simplicity, we set <span class="math display">
+\begin{aligned}
+  a_t := \sqrt{\overline{\alpha}_t}, \quad b_t := \sqrt{1-\overline{\alpha}_t}.
+\end{aligned}
+</span> Then we may rewrite <span class="math display">
+\begin{aligned}
+  X_t = a_t X_0 + b_t \overline{\mathcal{E}}_t, \quad a_t^2+b_t^2 = 1.
+\end{aligned}
+</span> Define the velocity, a random vector we want to predict, <span class="math display">
+\begin{aligned}
+  V_t := -b_t X_0 + a_t \overline{\mathcal{E}}_t.
+\end{aligned}
+</span> Then we have the following relations: <span class="math display">
+\begin{aligned}
+  X_0 &amp;= a_t X_t - b_t V_t , \cr  
+  \overline{\mathcal{E}}_t &amp;= b_t X_t + a_t V_t.
+\end{aligned}
+</span></p>
+<p>Then our algorithms become</p>
+<ol type="1">
+<li><p>Training</p>
+<ul>
+<li><span class="math inline">x_0\sim q(x_0)</span></li>
+<li><span class="math inline">\overline{\varepsilon}_t \sim \mathcal{N}(\mathbf{0},\mathbf{I})</span></li>
+<li><span class="math inline">x_t=a_t x_0 + b_t \overline{\varepsilon}_t</span></li>
+<li><span class="math inline">v_t = -b_t x_0 + a_t \overline{\varepsilon}_t</span></li>
+<li>Loss is <span class="math inline">\bigl\lVert \texttt{Net}_{\theta} (x_t,t) - v_t \bigr\rVert^2</span></li>
+</ul></li>
+<li><p>Sampling</p>
+<ul>
+<li><span class="math inline">\widehat{v}=\texttt{Net}_{\theta}(x_t,t)</span></li>
+<li><span class="math inline">\widehat{\varepsilon}=b_t x_t + a_t \widehat{v},\quad \widehat{x}_0=a_t x_t - b_t \widehat{v}</span></li>
+<li><span class="math inline">\widehat{\mu}=\frac{1}{\sqrt{\alpha_t}}\Bigl( x_t- \frac{\beta_t}{b_t} \Bigr) \widehat{\varepsilon}</span></li>
+</ul></li>
+</ol>
+</section>
+</section>
+<section id="experiments" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Experiments</h1>
+</section>
+<section id="conclusion" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Conclusion</h1>
+<div style="page-break-after: always;"></div>
+</section>
+<section id="references" class="level1 unnumbered">
+<h1 class="unnumbered">References</h1>
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-ANDERSON1982313" class="csl-entry" role="listitem">
+Anderson, Brian D. O. 1982. <span>“Reverse-Time Diffusion Equation Models.”</span> <em>Stochastic Processes and Their Applications</em> 12 (3): 313–26. doi:<a href="https://doi.org/10.1016/0304-4149(82)90051-5">10.1016/0304-4149(82)90051-5</a>.
+</div>
+<div id="ref-dhariwal2021diffusion" class="csl-entry" role="listitem">
+Dhariwal, Prafulla, and Alex Nichol. 2021. <span>“Diffusion Models Beat GANs on Image Synthesis.”</span> <a href="https://arxiv.org/abs/2105.05233">https://arxiv.org/abs/2105.05233</a>.
+</div>
+<div id="ref-goodfellow2014generative" class="csl-entry" role="listitem">
+Goodfellow, Ian J., Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio. 2014. <span>“Generative Adversarial Networks.”</span> <a href="https://arxiv.org/abs/1406.2661">https://arxiv.org/abs/1406.2661</a>.
+</div>
+<div id="ref-SNR" class="csl-entry" role="listitem">
+Hang, Tiankai, Shuyang Gu, Chen Li, Jianmin Bao, Dong Chen, Han Hu, Xin Geng, and Baining Guo. 2023. <span>“Efficient Diffusion Training via Min-SNR Weighting Strategy.”</span> In <em>Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)</em>, 7441–51.
+</div>
+<div id="ref-ho2020denoising" class="csl-entry" role="listitem">
+Ho, Jonathan, Ajay Jain, and Pieter Abbeel. 2020. <span>“Denoising Diffusion Probabilistic Models.”</span> <em>Advances in Neural Information Processing Systems</em> 33: 6840–51.
+</div>
+<div id="ref-kingma2022autoencoding" class="csl-entry" role="listitem">
+Kingma, Diederik P, and Max Welling. 2022. <span>“Auto-Encoding Variational Bayes.”</span> <a href="https://arxiv.org/abs/1312.6114">https://arxiv.org/abs/1312.6114</a>.
+</div>
+<div id="ref-pmlr-v37-sohl-dickstein15" class="csl-entry" role="listitem">
+Sohl-Dickstein, Jascha, Eric Weiss, Niru Maheswaranathan, and Surya Ganguli. 2015. <span>“Deep Unsupervised Learning Using Nonequilibrium Thermodynamics.”</span> In <em>Proceedings of the 32nd International Conference on Machine Learning</em>, edited by Francis Bach and David Blei, 37:2256–65. Proceedings of Machine Learning Research. Lille, France: PMLR. <a href="https://proceedings.mlr.press/v37/sohl-dickstein15.html">https://proceedings.mlr.press/v37/sohl-dickstein15.html</a>.
+</div>
+<div id="ref-song2022denoising" class="csl-entry" role="listitem">
+Song, Jiaming, Chenlin Meng, and Stefano Ermon. 2022. <span>“Denoising Diffusion Implicit Models.”</span> <a href="https://arxiv.org/abs/2010.02502">https://arxiv.org/abs/2010.02502</a>.
+</div>
+</div>
+<div style="page-break-after: always;"></div>
+</section>
+
+
+<div id="quarto-appendix" class="default"><section id="appendix" class="level1 appendix" data-number="5"><h2 class="anchored quarto-appendix-heading"><span class="header-section-number">5</span> Appendix</h2><div class="quarto-appendix-contents">
+
+<section id="sec-markov-equivalent" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="sec-markov-equivalent"><span class="header-section-number">5.1</span> Markov property is equivalent to adding noise independently</h2>
+<p>Given the probability measure <span class="math inline">\mathbf{Q}</span> such that</p>
+<ul>
+<li><span class="math inline">q(x_0)</span> is the mass (respect to <span class="math inline">\mathbf{Q}</span>) of our image data, and</li>
+<li><span class="math inline">X_0,\mathcal{E}_1,\cdots,\mathcal{E}_T</span> are independent under <span class="math inline">\mathbf{Q},</span> and</li>
+<li><span class="math inline">\mathcal{E}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})</span> under <span class="math inline">\mathbf{Q}</span> for <span class="math inline">t=1,\cdots, T.</span></li>
+</ul>
+<p>Under the assumptions above, we have the following properties under <span class="math inline">\mathbf{Q}</span>:</p>
+<ul>
+<li><p>Under <span class="math inline">\mathbf{Q},</span> if we set <span class="math display">
+\begin{aligned}
+  X_t = \sqrt{\overline{\alpha}_t}X_{0}+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t,
+\end{aligned}
+</span> then <span class="math inline">X_0,</span> <span class="math inline">\overline{\mathcal{E}}_t</span> are independent, and <span class="math inline">\overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I}).</span> Note that this property says that <span class="math inline">q(x_T)\approx \mathcal{N}(\mathbf{\mathbf{0},\mathbf{I}})</span> as <span class="math inline">T</span> large.</p></li>
+<li><p>Under <span class="math inline">\mathbf{Q},</span> <span class="math inline">\lbrace X_0,X_1,\cdots,X_T\rbrace</span> is a Markov chain with the transition density <span class="math display">
+\begin{aligned}
+  q(x_t\vert x_{t-1}) = \mathcal{N}(\sqrt{\alpha_t}x_{t-1},\beta_t \mathbf{I}).
+\end{aligned}
+</span></p></li>
+</ul>
+<div class="proof remark">
+<p><span class="proof-title"><em>Remark</em>. </span>Note that the Markov property is equivalent to adding noise independently. That is, if <span class="math inline">\bigl( \lbrace X_t\rbrace_{t=0}^T, \mathbf{Q} \bigr)</span> is a Markov chain with the transition density <span class="math display">
+\begin{aligned}
+  q(x_t\vert x_{t-1}) = \mathcal{N}(\sqrt{\alpha_t}x_{t-1},\beta_t \mathbf{I}).
+\end{aligned}
+</span> and we set <span class="math display">
+\begin{aligned}
+  X_t = \sqrt{\overline{\alpha}_t}X_{0}+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t,
+\end{aligned}
+</span> then</p>
+<ul>
+<li><span class="math inline">X_0,\mathcal{E}_1,\cdots,\mathcal{E}_T</span> are independent under <span class="math inline">\mathbf{Q},</span> and</li>
+<li><span class="math inline">\mathcal{E}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})</span> under <span class="math inline">\mathbf{Q}</span> for <span class="math inline">t=1,\cdots, T.</span></li>
+</ul>
+</div>
+</section>
+<section id="qx_0-approx-px_0" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="qx_0-approx-px_0"><span class="header-section-number">5.2</span> <span class="math inline">q(x_0) \approx p(x_0)</span></h2>
+<p>Note that <span class="math display">
+\begin{aligned}
+  q(x_{0:3})
+  &amp;= q(x_3\vert x_2) \cdot q(x_2\vert x_1) \cdot q(x_1\vert x_0) \cdot q(x_0) \cr
+  &amp;= \frac{q(x_3)}{q(x_2)}q(x_2\vert x_3) \cdot \frac{q(x_2)}{q(x_1)}q(x_1\vert x_2)\cdot \frac{q(x_1)}{q(x_0)} q(x_0\vert x_1) \cdot q(x_0) \cr
+  &amp;= q(x_0\vert x_1) \cdot q(x_1\vert x_2) \cdot q(x_2\vert x_3) \cdot \underbrace{q(x_3)}_{\approx \mathcal{N}(\mathbf{0},\mathbf{I})}
+\end{aligned}
+</span> and <span class="math display">
+\begin{aligned}
+  p(x_{0:3}) = q(x_0\vert x_1) \cdot q(x_1\vert x_2) \cdot q(x_2\vert x_3) \cdot \underbrace{p(x_3)}_{\mathcal{N}(\mathbf{0},\mathbf{I})}.
+\end{aligned}
+</span> Then <span class="math display">
+\begin{aligned}
+  q(x_0) = \int_{x_{1:3}} q(x_{0:3}) \, \mathrm{d}x_{0:3} \approx \int_{x_{1:3}} p(x_{1:3}) \, \mathrm{d}x_{0:3} = p(x_0).
+\end{aligned}
+</span></p>
+</section>
+<section id="sde" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="sde"><span class="header-section-number">5.3</span> SDE</h2>
+<p>If <span class="math inline">(X_t)_{t\in [0,1]}</span> satisfies the SDE <span class="math display">
+\begin{aligned}
+  \mathrm{d} X_t = \mu(X_t,t) \mathrm{d}t + \sigma(X_t,t) \mathrm{d}B_t,
+\end{aligned}
+</span> where <span class="math inline">\mu(\cdot ,t):\mathbb R^n\longrightarrow \mathbb R^n</span> and <span class="math inline">\sigma(\cdot ,t): \mathbb R^n \longrightarrow \mathbb R^{n\times n}</span> and <span class="math inline">(B_t)_{t\in [0,1]}</span> is a standard <span class="math inline">n</span>-dimensional Brownian Motion. Let <span class="math inline">q(\cdot , t)</span> be the density of <span class="math inline">X_t</span> for each <span class="math inline">t\in [0,1].</span> We have the following results:</p>
+<ul>
+<li><p>For <span class="math inline">t\in [0,1],</span> we define <span class="math display">
+\begin{aligned}
+  \overline{X}_t &amp;:= X_{1-t}, \quad  &amp;
+  \overline{q}(\cdot , t) &amp;:= q(\cdot , 1-t), \quad\cr
+  \overline{\mu}(\cdot , t) &amp;:= \mu(\cdot , 1-t), \quad  &amp;
+  \overline{\sigma}(\cdot , t) &amp;:= \sigma( \cdot , 1-t ).
+\end{aligned}
+</span> Then by <span class="citation" data-cites="ANDERSON1982313">Anderson (<a href="#ref-ANDERSON1982313" role="doc-biblioref">1982</a>)</span>, the <strong>reverse process</strong> <span class="math inline">(\overline{X}_t)_{t\in [0,1]}</span> satisfies <span id="eq-reverseSDE0"><span class="math display">
+\begin{aligned}
+  \mathrm{d} \overline{X}_t
+  &amp;= \Bigl( \underbrace{-\overline{\mu}(X_t,t) +
+    \overline{\sigma} \bigl( \overline{X}_t,t \bigr) \overline{\sigma} \bigl( \overline{X}_t,t \bigr)^{\mathtt{T}} \nabla_{x} \log \overline{q}\bigl( \overline{X}_t,t \bigr)
+    + \nabla_x  \overline{\sigma} \bigl( \overline{X}_t,t \bigr) \overline{\sigma} \bigl( \overline{X}_t,t \bigr)^{\mathtt{T}}}_{\text{drift coefficient}}
+    \Bigr) \mathrm{d}t  \cr
+  &amp; \qquad + \underbrace{\overline{\sigma}\bigl( \overline{X}_t,t \bigr)}_{\text{diffusion coefficient}} \mathrm{d}\overline{B}_t,
+\end{aligned}
+\tag{10}</span></span> where <span class="math inline">(\overline{B}_t)_{t\in [0,1]}</span> is a standard <span class="math inline">n</span>-dimensional Brownian Motion.</p>
+<ul>
+<li><p>Note that the diffusion coefficient of the reverse process <span class="math inline">\bigl( \overline{X}_t \bigr)_{t\in [0,1]}</span> has the same form as <span class="math inline">(X_t)_{t\in [0,1]}.</span> This explains why it is reasonable to assume that <span class="math inline">\Sigma_{\theta}(x,t)</span> is independent of <span class="math inline">x</span> in <a href="#eq-Sig_the_indep_x" class="quarto-xref">Equation&nbsp;5</a>.</p></li>
+<li><p>If <span class="math inline">\sigma(\cdot ,t)=\sigma(t)</span> is independent of <span class="math inline">x,</span> then <span class="math inline">\nabla_x  \overline{\sigma} \bigl( \overline{X}_t,t \bigr) \overline{\sigma} \bigl( \overline{X}_t,t \bigr)^{\mathtt{T}}=0</span> and the drift coefficient of <a href="#eq-reverseSDE0" class="quarto-xref">Equation&nbsp;10</a> is the original average <span class="math inline">-\overline{\mu}(X_t,t)</span> guided by the score function <span class="math inline">\nabla_{x} \log \overline{q}\bigl( \overline{X}_t,t \bigr).</span></p></li>
+</ul></li>
+<li><p>Consider a process <span class="math inline">(\widetilde{X}_t)_{t\in[0,1]}</span> satisfies the ODE <span class="math display">
+\begin{aligned}
+  \mathrm{d}\widetilde{X}_t
+  = \Bigl( \mu(\widetilde{X}_t, t)
+  - \frac{1}{2} \sigma(\widetilde{X}_t,t) \sigma(\widetilde{X}_t,t)^{\mathtt{T}} \nabla_{x} \log q(\widetilde{X}_t,t)
+  - \frac{1}{2} \nabla_x \sigma(\widetilde{X}_t,t) \sigma(\widetilde{X}_t,t)^{\mathtt{T}} \Bigr) \mathrm{d}t.
+\end{aligned}
+</span> Then for each <span class="math inline">t\in [0,1],</span> <span class="math inline">X_t</span> and <span class="math inline">\widetilde{X}_t</span> have the same distribution.</p></li>
+</ul>
+</section>
+<section id="seperate-l" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="seperate-l"><span class="header-section-number">5.4</span> Seperate <span class="math inline">L</span></h2>
+<p><span class="math display">
+\begin{aligned}
+  L :=
+  \mathbb E_{X_{0:T}\sim q(x_{0:T})} \Bigl[ -\log \frac{p_{\theta}(X_{0:T})}{q(X_{1:T}\vert X_0)} \Bigr].
+\end{aligned}
+</span> <span class="math display">
+\begin{aligned}
+  p_{\theta}(x_{0:T}) &amp;= p_{\theta}(x_T) \cdot \prod_{t=2}^T p_{\theta}(x_{t-1}\vert x_t) \cdot  p_{\theta}(x_0\vert x_1) , \cr
+  q(x_{1:T}\vert x_0) &amp;= \prod_{t=2}^{T} q(x_t \vert x_{t-1}) \cdot q(x_1\vert x_0) \cr
+  &amp;= \prod_{t=2}^{T} q(x_t \vert x_{t-1}, x_0) \cdot q(x_1\vert x_0) \cr
+  &amp;= \prod_{t=2}^{T} \frac{q(x_{t-1} \vert x_{t}, x_0) q(x_t\vert x_0) }{q(x_{t-1}\vert x_0)} \cdot q(x_1\vert x_0) \cr
+  &amp;= q(x_T\vert x_0) \cdot \prod_{t=2}^{T} q(x_{t-1} \vert x_{t}, x_0)
+\end{aligned}
+</span></p>
+</section>
+</div></section></div></main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+    <script type="text/javascript">
+    (function(d) {
+      d.querySelectorAll(".pseudocode-container").forEach(function(el) {
+        let pseudocodeOptions = {
+          indentSize: el.dataset.indentSize || "1.2em",
+          commentDelimiter: el.dataset.commentDelimiter || "//",
+          lineNumber: el.dataset.lineNumber === "true" ? true : false,
+          lineNumberPunc: el.dataset.lineNumberPunc || ":",
+          noEnd: el.dataset.noEnd === "true" ? true : false,
+          titlePrefix: el.dataset.algTitle || "Algorithm"
+        };
+        pseudocode.renderElement(el.querySelector(".pseudocode"), pseudocodeOptions);
+      });
+    })(document);
+    (function(d) {
+      d.querySelectorAll(".pseudocode-container").forEach(function(el) {
+        titleSpan = el.querySelector(".ps-root > .ps-algorithm > .ps-line > .ps-keyword")
+        titlePrefix = el.dataset.algTitle;
+        titleIndex = el.dataset.chapterLevel ? el.dataset.chapterLevel + "." + el.dataset.pseudocodeIndex : el.dataset.pseudocodeIndex;
+        titleSpan.innerHTML = titlePrefix + " " + titleIndex + " ";
+      });
+    })(document);
+    </script>
+  
+
+
+
+
+</body></html>

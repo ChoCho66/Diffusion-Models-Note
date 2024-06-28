@@ -1,0 +1,16 @@
+
+NLL FID IS
+
+# <https://youtu.be/JbfcAaBT66U?t=244>
+- FID (Frechet Inception Distance) 越小的話, 生成品質越好
+- C-sore (CLIP score) 越大的話, 生成越好
+
+## Frechet Inception Distance (FID)
+- 先有個 pre-train 好的 CNN model,
+  $$
+  \begin{aligned}
+    \text{CNN}: \mathbb R^n \longrightarrow \mathbb R^m.
+  \end{aligned}
+  $$
+
+## CLIP (Contrastive Language-Image Pre-Training)

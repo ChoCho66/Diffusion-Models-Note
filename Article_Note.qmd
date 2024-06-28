@@ -1,0 +1,91 @@
+---
+scrollable: true
+---
+
+## Efficient Diffusion Training via Min-SNR Weighting Strategy
+- 在本文中，我們發現收斂速度慢的部分原因是時間步長之間的最佳化方向衝突。
+- Min-SNR-γ.
+- 此方法根據箝位訊號雜訊比調整時間步長的損失權重，有效平衡時間步長之間的衝突。
+
+## Progressive Distillation for Fast Sampling of Diffusion Models
+- 提供了一種新的參數化方式, 讓 DM 可以在很少的 sampling step 時有更高穩定度.
+- 提出了一種新的方法: distillation: 使用許多步驟將經過訓練的 確定性擴散採樣器 提煉成 新的擴散模型, 該模型只需一半的採樣步驟.
+
+## SDEdit- Guided Image Synthesis and Editing with Stochastic Differential Equations
+- 生成的圖片要在 faithfulness (user inputs, e.g., hand-drawn colored strokes) and realism 取得平衡.
+- GAN 在這任務上面使用 conditional GANs or GAN inversions. 但這兩個皆需要提供額外的訓練資料或損失函數。 ？？？？？？
+- SDEdit 不需要特定任務的訓練或反演，可以自然達到真實性和忠實之間的平衡。
+
+## Truncated Diffusion Probabilistic Models and Diffusion-based Adversarial Auto-Encoders
+- Truncated Diffusion Probabilistic Models = TDPM.
+- 擴散模型太慢太貴, 這篇的解決方式是只加躁到某時間 $T_{\text{trunc}}$ ($T_{\text{trunc}}\ll T$) 就停下來. 
+- Reverse process 是從 $p_{\psi}(x_{T_{\text{trunc}}})$ 開始, 其中 $p_{\psi}(x_{T_{\text{trunc}}}) \approx q (x_{T_{\text{trunc}}}).$
+  - $q (x_{T_{\text{trunc}}})$ 可以如下計算
+    $$
+    \begin{aligned}
+      q(x_{T_{\text{trunc}}}) = \int q(x_{T_{\text{trunc}}} \vert x_0) q(x_0) \mathrm{d}x_0.
+    \end{aligned}
+    $$
+  - $p_{\psi}(x_{T_{\text{trunc}}})$ 使用 implicit generative model (powered by the same U-Net).
+- TDPM 可以看成 由 擴散過程 和 可學習的隱式先驗 所支援的對抗性自動編碼器. ？？？？？？
+- 實驗結果：TDPM 在 無條件 和 文字引導生成圖片 (text-guided image generations) 可以比 DDPM 上提供改進. ？？？？？？
+
+## Sketch-Guided Text-to-Image Diffusion Models
+
+## Abstract
+
+- Text-to-Image models have introduced a remarkable leap in the evolution of machine learning, demonstrating high-quality synthesis of images from a given text-prompt.
+- However, these powerful pretrained models still lack control handles that can guide spatial properties of the synthesized images.
+- In this work, we introduce a universal approach to guide a pretrained text-to-image diffusion model, with a spatial map from another domain (e.g., sketch) during inference time.
+- Unlike previous works, our method does not require to train a dedicated model or a specialized encoder for the task.
+  - 文字到圖像模型在機器學習的發展中引入了顯著的飛躍，展示了根據給定文字提示的圖像的高品質合成。
+  - 然而，這些強大的預訓練模型仍然缺乏可以指導合成影像的空間屬性的控製手柄。
+  - 在這項工作中，我們引入了一種通用方法來指導預訓練的文本到圖像擴散模型，並在推理期間使用來自另一個域（例如草圖）的空間圖。
+  - 與先前的工作不同，我們的方法不需要為任務訓練專用模型或專門的編碼器。
+
+- Our key idea is to train a Latent Guidance Predictor (LGP) - a small, per-pixel, Multi-Layer Perceptron (MLP) that maps latent features of noisy images to spatial maps, where the deep features are extracted from the core Denoising Diffusion Probabilistic Model (DDPM) network.
+- The LGP is trained only on a few thousand images and constitutes a differential guiding map predictor, over which the loss is computed and propagated back to push the intermediate images to agree with the spatial map.
+- The per-pixel training offers flexibility and locality which allows the technique to perform well on out-of-domain sketches, including free-hand style drawings.
+- We take a particular focus on the sketch-to-image translation task, revealing a robust and expressive way to generate images that follow the guidance of a sketch of arbitrary style or domain.
+  - 我們的關鍵思想是訓練一個潛在指導預測器（LGP）——一個小型的、每像素的多層感知器（MLP），它將噪聲圖像的潛在特徵映射到空間圖，其中深層特徵是從核心去噪擴散中擷取的機率模型（DDPM）網路。
+  - LGP 僅在數千張影像上進行訓練，並構成一個差分引導圖預測器，在該預測器上計算損失並傳播回來，以推動中間影像與空間圖一致。
+  - 每像素訓練提供了靈活性和局部性，使得該技術能夠在域外草圖上表現良好，包括徒手風格的繪圖。
+  - 我們特別關注草圖到影像的轉換任務，揭示了一種穩健且富有表現力的方法來產生遵循任意風格或領域草圖指導的影像。
+
+### Conclusions
+
+- We presented a technique to guide a pre-trained text-to-image model diffusion model with a spatial map.
+- We have focused on sketch-guidance, and showed that the technique can handle well out-of-domain sketches, which may have a large variety of styles completely different than those seen in the training time.
+- The gist of the technique is the per-pixel training of a lightweight MLP component that is trained on rather small training data.
+- The per-pixel training acts more like a differential edge-detector and unlike common per-image training, it is not bound to a particular global sketching style.
+  - 我們提出了一種利用空間地圖指導預訓練文本到圖像模型擴散模型的技術。
+  - 我們專注於草圖引導，並表明該技術可以很好地處理域外草圖，這些草圖可能具有與訓練時看到的完全不同的多種風格。
+  - 該技術的要點是輕量級 MLP 組件的每像素訓練，該組件是在相當小的訓練資料上進行訓練的。
+  - 每個像素訓練更像是一個差分邊緣偵測器，與常見的每個影像訓練不同，它不受特定的全域草圖風格的約束。
+
+- Our technique piggybacks on a pertained text-to-image model diffusion model and thus offers a strong multi-modal sketch-guidance technique to users.
+- In a sense, the technique accepts a rich variety of sketching styles and at the same time provides a rich variety of outputs, where the user has intuitive control over the input, and semantic control over the output.
+  - 我們的技術依賴相關的文字到圖像模型擴散模型，從而為使用者提供了強大的多模式草圖指導技術。
+  - 從某種意義上說，該技術接受豐富多樣的草圖風格，同時提供豐富多樣的輸出，使用者可以直觀地控制輸入，並對輸出進行語義控制。
+
+- Still, our presented technique is only a step toward gaining more control over the output of generative text-image models.
+- The technique has its limitations.
+- Currently, the technique is vulnerable to the local style of the strokes.
+- The technique still struggles with complex and cluttered sketches as it treats all of the strokes equally without prioritizing them according to their saliency or semantics.
+- Also, since the text-image diffusion model is stochastic, there might be conflicts between the random seed and the input sketch, which may lead to a generation of an output that does not agree well with the sketch.
+- Figure 14 shows representative examples where the model fails to provide satisfying results.
+- The quality of the results may drop for different initialization, and complex scenes with mixed and ambiguous semantics.
+  - 儘管如此，我們提出的技術只是獲得對生成文字圖像模型輸出的更多控制的一步。
+  - 該技術有其局限性。
+  - 目前，該技術容易受到局部筆畫風格的影響。
+  - 該技術仍然難以處理複雜而雜亂的草圖，因為它平等地對待所有筆劃，而不根據其顯著性或語義對它們進行優先排序。
+  - 此外，由於文字影像擴散模型是隨機的，因此隨機種子和輸入草圖之間可能存在衝突，這可能導致產生與草圖不太相符的輸出。
+  - 圖 14 顯示了模型未能提供令人滿意的結果的代表性範例。
+  - 對於不同的初始化以及具有混合和模糊語義的複雜場景，結果的品質可能會下降。
+
+- In the future, we would like to advance and improve the technique by adding a sketch inversion step to yield a stronger seed to the diffusion process, to better push the output toward the outline of the input sketch.
+- Another direction is to quickly learn a personalized style using just a few shots.
+- With a quick training session, the latent sketch predictor can accommodate the artist’s stroke style.
+  - 未來，我們希望透過添加草圖反轉步驟來推進和改進該技術，以便為擴散過程產生更強的種子，從而更好地將輸出推向輸入草圖的輪廓。
+  - 另一個方向是透過幾張照片快速學習個人化風格。
+  - 透過快速訓練，潛在草圖預測器可以適應藝術家的筆畫風格。

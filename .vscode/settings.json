@@ -1,0 +1,14 @@
+{
+  "python.analysis.typeCheckingMode": "basic",
+  "grammarly.selectors": [
+    {
+      "language": "markdown,quarto,rmarkdown",
+      "pattern": "**/*.qmd,**/*.txt,*.qmd,*.txt,*.md,*.rmd"
+    },
+    {
+      "language": "quarto",
+      "scheme": "file",
+      "pattern": "Note/Note.qmd"
+    }
+  ]
+}

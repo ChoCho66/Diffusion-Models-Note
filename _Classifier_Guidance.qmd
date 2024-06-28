@@ -1,0 +1,63 @@
+## Conditional Diffusion Model {#sec-cdm}
+
+@dhariwal2021diffusion
+
+- 一般沒有限定條件的 diffusion model，我們無法去控制想生成的東西。這明顯無法滿足我們的需求。
+比如說在 mnist 之中，我們想要去控制生成 0~9 的是哪個數字。
+又比如說 celebA 這資料集中，我們想要去生成的大頭像有什麼特徵（比如說是男是女，有無戴眼鏡）。
+所以自然而然會有所謂的 Conditional diffusion model。
+
+- 我們先從簡單類別的說起，用 mnist 的數字來解釋。
+  我們現在有資料集 $X \times Y$ 的分佈
+  $$
+  \begin{aligned}
+    \widehat{q}(x_0,y), \quad x_0 \in \mathbb R^{w\times h}, \quad y\in \mathbb R^n,
+  \end{aligned}
+  $$
+  where 
+  - $X_0$ 是數字圖片;
+  - $Y$ 是數字 label 在 $\mathbb R^n$ 的 embed 
+    - That is, $\mathbb R^n$ is the embed space of labels.
+    - For this example, $0,1,\cdots, 9$ are `nn.Embedding(10,n)(torch.arange(10))`. （所以這裡 embed 也是要可學習的）。
+
+- Given $Y = y.$ We want to generate an image $x_0$ that has the label $y.$
+
+- Assume that we already have $\widehat{q}(y\vert x_0).$ 
+  That is, when we have $x_0,$ we know the distribution of labels of $x_0.$
+
+- 如果忽略掉 $Y,$ 只看 $X_0,$ 可視為之前的 unconditional diffusion model
+  
+- We define $q$ as before:
+  - $q(x_0)$: the distribution of $X_0$ (無表達式);
+  - $q(x_t\vert x_{t-1})= \mathcal{N}(\sqrt{\alpha_t}x_{t-1}, (1-\alpha_t)\mathbf{I}).$
+
+- 同樣地我們令 $\lbrace X_t \rbrace_{t=0}^T$ 為時間 $t$ 時的加噪圖片, 只是加噪方式是如下:
+
+  **Define** the forward process of $(X_{0:T},Y)$ by the following:
+  
+  - $\widehat{q}(x_0):= q(x_0)$ (無表達式) (eq 28).
+    - So that we have $\widehat{q}(x_0,y)=\underbrace{q(x_0)}_{\text{無表達式}} \cdot \underbrace{\widehat{q}(y\vert x_0)}_{\text{有表達式}}.$ 
+  - $\widehat{q}(x_t\vert x_{t-1},y):= q(x_{t}\vert x_{t-1})$ (有表達式) (eq 30);
+  - $\widehat{q}(x_{1:T}\vert x_0,y):= \prod_{t=1}^T \widehat{q}(x_t\vert x_{t-1},y)$ (eq 31).
+
+  Note that
+  $$
+  \begin{aligned}
+    \widehat{q}(x_{0:T},y)
+    &= \widehat{q}(x_0,y) \cdot \widehat{q}(x_{1:T}\vert x_0,y), \cr 
+    &= \widehat{q}(x_0,y) \cdot \prod_{t=1}^T \widehat{q}(x_t\vert x_{t-1},y).
+  \end{aligned}
+  $$
+
+- For this $\widehat{q},$ we have
+  - $\widehat{q}(x_{t}\vert x_{t-1})=\widehat{q}(x_{t}\vert x_{t-1},y)$ (eq 32~37) $= q(x_t\vert x_{t-1})$ (eq 30);
+  - $\widehat{q}(x_{1:T}\vert x_0)= q(x_{1:T}\vert x_0)$ (eq 38~44);
+  - $\widehat{q}(x_t)=q(x_t)$ (eq 45~50);
+  - $\widehat{q}(x_{t-1}\vert x_{t}) = q(x_{t-1}\vert x_{t})$;
+  - (上面四點說明 $\widehat{q}$ 在不考慮 label 時, 跟之前的 diffusion model $q$ 分佈完全一樣);
+  - $\widehat{q}(y\vert x_{t-1},x_{t}) = \widehat{q}(y\vert x_{t-1})$ (eq 51~54);
+  - $\widehat{q}(x_{t-1}\vert x_{t},y) = \underbrace{q(x_{t-1}\vert x_{t})}_{\approx p_{\theta}(x_{t-1}\vert x_{t})} \cdot \underbrace{\widehat{q}(y\vert x_{t-1})}_{\approx p_{\phi}(y\vert x_{t-1})} \Big/ \underbrace{\widehat{q}(y\vert x_{t})}_{\text{constant}}$ (eq 55~61).
+    - Note that $p_{\phi}(y\vert x_t)$ 是 $p_{\phi}(y\vert x_t,t)$ 的縮寫.
+    - Note that $p_{\theta}(x_{t-1}\vert x_{t}), p_{\phi}(y\vert x_{t-1})$ is our model.
+      - 這裡可以使用已經訓練好的 $p_{\theta}$ (純粹DDPM的) 和 分類器.
+

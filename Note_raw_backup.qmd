@@ -1,0 +1,52 @@
+---
+bibliography: references.bib
+css: style.css
+format:
+  html:
+    # embed-resources: true
+    html-math-method: katex
+    number-depth: 2
+    number-sections: true
+    toc: true
+    # include-in-header:
+      # - file: quarto-pseudocode-katex.html
+  pdf:
+    number-depth: 2
+    number-sections: true
+    toc: true
+    # include-in-header:
+    include-in-header:
+    # \usepackage{mathtools}
+      text: |
+        \usepackage{xeCJK}
+    include-before-body:
+      text: |
+        \renewcommand{\Return}{\State \textbf{return}~}
+        \newcommand{\Print}{\State \textbf{print}~}
+        \newcommand{\Break}{\State \textbf{break}}
+        \newcommand{\Continue}{\State \textbf{continue}}
+        \newcommand{\True}{\textbf{true}}
+        \newcommand{\False}{\textbf{false}}
+        \renewcommand{\And}{\textbf{and}~}
+        \newcommand{\Or}{\textbf{or}~}
+        \renewcommand{\Not}{\textbf{not}~}
+        \newcommand{\To}{\textbf{to}~}
+        \newcommand{\DownTo}{\textbf{downto}~}
+    pdf-engine: xelatex
+    keep-tex: true
+filters:
+  - acronyms  
+  - pseudocode
+acronyms:
+  keys:
+  - shortname: DDPM
+    longname: Denoising Diffusion Probabilistic Models
+  - shortname: DDIM
+    longname: Denoising Diffusion Implicit Models
+  loa_title: "Glossary"
+  insert_loa: "end"
+  sorting: alphabetical
+  style: "short-long"
+abstract: |
+  The purpose of this article is to introduce the diffusion model. We will first introduce the basic concepts of DDPM, and then introduce some developments based on DDPM, including DDIM and the condition diffusion model.
+---
