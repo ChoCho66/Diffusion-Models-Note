@@ -2,6 +2,11 @@
 title: "Diffusion Models Note"
 format:
   arxiv-pdf:
+    include-in-header:
+      text: |
+        \usepackage{xeCJK}
+        \usepackage{fontspec}
+        \setCJKmonofont{STFangsong}
     include-before-body:
       text: |
         \renewcommand{\Return}{\State \textbf{return}~}
@@ -607,7 +612,7 @@ There are two special values for $\sigma.$
   $$
   
 
-{{< include _Classifier_Guidance.qmd >}}
+{{< include _Classifier-Guidance.qmd >}}
 
 
 
@@ -705,7 +710,7 @@ Then our algorithms become
     - $\widehat{\mu}=\frac{1}{\sqrt{\alpha_t}}\Bigl( x_t- \frac{\beta_t}{b_t} \Bigr) \widehat{\varepsilon}$
 
 
-{{< include _Experiments_Conclusion.qmd >}}
+{{< include _Experiments-Conclusion.qmd >}}
 
 
 {{< pagebreak >}}

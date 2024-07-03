@@ -404,7 +404,7 @@ window.Quarto = {
   L_{t-1}^{\text{simple}} = \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\ X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \biggl(  \Big\lVert \overline{\mathcal{E}}_t - \mathtt{Net}_{\theta}(X_t,t) \Big\rVert^2 \biggr).
 \end{aligned}
 </span> <span class="math inline">L_0</span> is the same. Therefore, our training algorithm is as follows:</p>
-<div id="alg-test-text-style" class="pseudocode-container" data-pseudocode-index="1" data-no-end="false" data-comment-delimiter="▷" data-indent-size="1.2em" data-line-number="true" data-alg-title="Algorithm" data-line-number-punc=":">
+<div id="alg-test-text-style" class="pseudocode-container" data-indent-size="1.2em" data-pseudocode-index="1" data-comment-delimiter="▷" data-line-number-punc=":" data-line-number="true" data-alg-title="Algorithm" data-no-end="false">
 <div class="pseudocode">
 \begin{algorithm} \caption{Training (DDPM)} \begin{algorithmic} \Repeat\State $t\sim \text{Uniform}(\lbrace 1,\cdots,T \rbrace)$\Comment{ Sample random step}\State $x_0\sim q(x_0)$\Comment{ Sample random initial image}\State $\overline{\varepsilon}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})$\Comment{ Sample random noise}\State $x_t = \sqrt{\overline{\alpha}_t}x_0 + \sqrt{1-\overline{\alpha}_t}\cdot \overline{\varepsilon}_t$\State Take gradient descent step on $\Bigl\lVert \overline{\varepsilon}_t - \mathtt{Net}_{\theta}(x_t,t) \Bigr\rVert^2$\Comment{ Optimization}\Until{ converged} \end{algorithmic} \end{algorithm}
 </div>
@@ -422,7 +422,7 @@ window.Quarto = {
 \end{aligned}
 </span></p>
 <p>Therefore, our sampling algorithm is as follows:</p>
-<div id="alg-diffusion-model-sampling-shortly" class="pseudocode-container" data-pseudocode-index="2" data-no-end="false" data-comment-delimiter="▷" data-indent-size="1.2em" data-line-number="true" data-alg-title="Algorithm" data-line-number-punc=":">
+<div id="alg-diffusion-model-sampling-shortly" class="pseudocode-container" data-indent-size="1.2em" data-pseudocode-index="2" data-comment-delimiter="▷" data-line-number-punc=":" data-line-number="true" data-alg-title="Algorithm" data-no-end="false">
 <div class="pseudocode">
 \begin{algorithm} \caption{Sampling (DDPM)} \begin{algorithmic} \State $x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I})$\For{ $t=T,\cdots,1$}\If{ $t&gt;1$}\State $z \sim \mathcal{N}(\mathbf{0},\mathbf{I})$\Else\State $z= \mathbf{0}$\EndIf\State $x_{t-1}=\frac{1}{\sqrt{\alpha_t}}\Big(x_t-\frac{1-\alpha_t}{\sqrt{1-\overline{\alpha}_t}}\mathtt{Net}_{\theta}(x_t,t)\Big)+\sigma_t z$\EndFor\Return $x_0$ \end{algorithmic} \end{algorithm}
 </div>
@@ -522,10 +522,10 @@ Note that if we write <span class="math inline">q_{\sigma}(x_{t-1}\vert x_t,x_0)
 <li><span class="math inline">Y</span> 是數字 label 在 <span class="math inline">\mathbb R^n</span> 的 embed
 <ul>
 <li>That is, <span class="math inline">\mathbb R^n</span> is the embed space of labels.</li>
-<li>For this example, <span class="math inline">0,1,\cdots, 9</span> are <code>nn.Embedding(10,n)(torch.arange(10))</code>. （所以這裡 embed 也是要可學習的）。</li>
+<li>For this example, <span class="math inline">0,1,\cdots, 9</span> are <code>nn.Embedding(10,n)(torch.arange(10))</code>. （所以這裡 embed 也是要可學習的）.</li>
 </ul></li>
 </ul></li>
-<li><p>Given <span class="math inline">Y = y.</span> We want to generate an image <span class="math inline">x_0</span> that has the label <span class="math inline">y.</span></p></li>
+<li><p>Given the label <span class="math inline">Y = y.</span> We want to generate an image <span class="math inline">x_0</span> which has the label <span class="math inline">y.</span></p></li>
 <li><p>Assume that we already have <span class="math inline">\widehat{q}(y\vert x_0).</span> That is, when we have <span class="math inline">x_0,</span> we know the distribution of labels of <span class="math inline">x_0.</span></p></li>
 <li><p>如果忽略掉 <span class="math inline">Y,</span> 只看 <span class="math inline">X_0,</span> 可視為之前的 unconditional diffusion model</p></li>
 <li><p>We define <span class="math inline">q</span> as before:</p>
@@ -533,6 +533,10 @@ Note that if we write <span class="math inline">q_{\sigma}(x_{t-1}\vert x_t,x_0)
 <li><span class="math inline">q(x_0)</span>: the distribution of <span class="math inline">X_0</span> (無表達式);</li>
 <li><span class="math inline">q(x_t\vert x_{t-1})= \mathcal{N}(\sqrt{\alpha_t}x_{t-1}, (1-\alpha_t)\mathbf{I}).</span></li>
 </ul></li>
+</ul>
+<section id="important" class="level4" data-number="2.5.0.1">
+<h4 data-number="2.5.0.1" class="anchored" data-anchor-id="important"><span class="header-section-number">2.5.0.1</span> Important</h4>
+<ul>
 <li><p>同樣地我們令 <span class="math inline">\lbrace X_t \rbrace_{t=0}^T</span> 為時間 <span class="math inline">t</span> 時的加噪圖片, 只是加噪方式是如下:</p>
 <p><strong>Define</strong> the forward process of <span class="math inline">(X_{0:T},Y)</span> by the following:</p>
 <ul>
@@ -541,7 +545,10 @@ Note that if we write <span class="math inline">q_{\sigma}(x_{t-1}\vert x_t,x_0)
 <li>So that we have <span class="math inline">\widehat{q}(x_0,y)=\underbrace{q(x_0)}_{\text{無表達式}} \cdot \underbrace{\widehat{q}(y\vert x_0)}_{\text{有表達式}}.</span></li>
 </ul></li>
 <li><span class="math inline">\widehat{q}(x_t\vert x_{t-1},y):= q(x_{t}\vert x_{t-1})</span> (有表達式) (eq 30);</li>
-<li><span class="math inline">\widehat{q}(x_{1:T}\vert x_0,y):= \prod_{t=1}^T \widehat{q}(x_t\vert x_{t-1},y)</span> (eq 31).</li>
+<li><span class="math inline">\widehat{q}(x_{1:T}\vert x_0,y):= \prod_{t=1}^T \widehat{q}(x_t\vert x_{t-1},y)</span> (eq 31).
+<ul>
+<li>Conditioned on <span class="math inline">Y=y,</span> the forward process <span class="math inline">X_0,X_1,\cdots,X_T</span> is a Markov chain with the transition density <span class="math inline">q(x_t\vert x_{t-1}).</span></li>
+</ul></li>
 </ul>
 <p>Note that <span class="math display">
 \begin{aligned}
@@ -552,13 +559,13 @@ Note that if we write <span class="math inline">q_{\sigma}(x_{t-1}\vert x_t,x_0)
 </span></p></li>
 <li><p>For this <span class="math inline">\widehat{q},</span> we have</p>
 <ul>
-<li><span class="math inline">\widehat{q}(x_{t}\vert x_{t-1})=\widehat{q}(x_{t}\vert x_{t-1},y)</span> (eq 32~37) <span class="math inline">= q(x_t\vert x_{t-1})</span> (eq 30);</li>
-<li><span class="math inline">\widehat{q}(x_{1:T}\vert x_0)= q(x_{1:T}\vert x_0)</span> (eq 38~44);</li>
-<li><span class="math inline">\widehat{q}(x_t)=q(x_t)</span> (eq 45~50);</li>
-<li><span class="math inline">\widehat{q}(x_{t-1}\vert x_{t}) = q(x_{t-1}\vert x_{t})</span>;</li>
-<li>(上面四點說明 <span class="math inline">\widehat{q}</span> 在不考慮 label 時, 跟之前的 diffusion model <span class="math inline">q</span> 分佈完全一樣);</li>
-<li><span class="math inline">\widehat{q}(y\vert x_{t-1},x_{t}) = \widehat{q}(y\vert x_{t-1})</span> (eq 51~54);</li>
-<li><span class="math inline">\widehat{q}(x_{t-1}\vert x_{t},y) = \underbrace{q(x_{t-1}\vert x_{t})}_{\approx p_{\theta}(x_{t-1}\vert x_{t})} \cdot \underbrace{\widehat{q}(y\vert x_{t-1})}_{\approx p_{\phi}(y\vert x_{t-1})} \Big/ \underbrace{\widehat{q}(y\vert x_{t})}_{\text{constant}}</span> (eq 55~61).
+<li><p><span class="math inline">\widehat{q}(x_{t}\vert x_{t-1})=\widehat{q}(x_{t}\vert x_{t-1},y)</span> (eq 32~37) <span class="math inline">= q(x_t\vert x_{t-1})</span> (eq 30);</p></li>
+<li><p><span class="math inline">\widehat{q}(x_{1:T}\vert x_0)= q(x_{1:T}\vert x_0)</span> (eq 38~44);</p></li>
+<li><p><span class="math inline">\widehat{q}(x_t)=q(x_t)</span> (eq 45~50);</p></li>
+<li><p><span class="math inline">\widehat{q}(x_{t-1}\vert x_{t}) = q(x_{t-1}\vert x_{t})</span>;</p></li>
+<li><p>(上面四點說明 <span class="math inline">\widehat{q}</span> 在不考慮 label 時, 跟之前的 diffusion model <span class="math inline">q</span> 分佈完全一樣);</p></li>
+<li><p><span class="math inline">\widehat{q}(y\vert x_{t-1},x_{t}) = \widehat{q}(y\vert x_{t-1})</span> (eq 51~54);</p></li>
+<li><p><span class="math inline">\widehat{q}(x_{t-1}\vert x_{t},y) = \underbrace{q(x_{t-1}\vert x_{t})}_{\approx p_{\theta}(x_{t-1}\vert x_{t})} \cdot \underbrace{\widehat{q}(y\vert x_{t-1})}_{\approx p_{\phi}(y\vert x_{t-1})} \Big/ \underbrace{\widehat{q}(y\vert x_{t})}_{\text{constant}}</span> (eq 55~61).</p>
 <ul>
 <li>Note that <span class="math inline">p_{\phi}(y\vert x_t)</span> 是 <span class="math inline">p_{\phi}(y\vert x_t,t)</span> 的縮寫.</li>
 <li>Note that <span class="math inline">p_{\theta}(x_{t-1}\vert x_{t}), p_{\phi}(y\vert x_{t-1})</span> is our model.
@@ -566,13 +573,54 @@ Note that if we write <span class="math inline">q_{\sigma}(x_{t-1}\vert x_t,x_0)
 <li>這裡可以使用已經訓練好的 <span class="math inline">p_{\theta}</span> (純粹DDPM的) 和 分類器.</li>
 </ul></li>
 </ul></li>
+<li><p>Define <span class="math inline">p_{\theta,\phi}(x_{t-1}\vert x_t,y) = \text{constant}\cdot  p_{\theta}(x_{t-1}\vert x_{t}) \cdot p_{\phi}(y\vert x_{t-1}).</span> So when given the label <span class="math inline">y,</span> we sample <span class="math inline">x_0</span> (with label <span class="math inline">y</span>) by the following:</p>
+<ul>
+<li><strong>For</strong> <span class="math inline">t=T,T-1,\cdots,1,</span>
+<ul>
+<li>Sample <span class="math inline">x_t\sim p_{\theta,\phi}(x_{t-1}\vert x_t,y)</span></li>
 </ul></li>
+<li><strong>EndFor</strong></li>
+</ul>
+<p>We organize the formula <span class="math inline">p_{\theta,\phi}(x_{t-1}\vert x_t,y).</span> Consider <span class="math inline">x_t, y</span> as two given constants. Using a Taylor expansion at <span class="math inline">x_{t-1}=\mu</span> (some constant), we have <span class="math display">
+\begin{aligned}
+  \log p_{\phi}(y\vert x_{t-1})
+  &amp;\approx  \log p_{\phi}(y\vert x_{t-1})\Big\vert_{x_{t-1}=\mu} + (x_{t-1}-\mu) \nabla_{x_{t-1}} \log p_{\phi}(y\vert x_{t-1})\Big\vert_{x_{t-1}=\mu} \cr
+  % &amp;\approx  \log p_{\phi}(y\vert x_{t-1})\Big\vert_{x_{t-1}=\mu} + (x_{t-1}-\mu) \nabla_{x_{t}} \log p_{\phi}(y\vert x_{t})\Big\vert_{x_{t}=\mu} \cr  
+  &amp;= (x_{t-1}-\mu) \cdot
+\end{aligned}
+</span></p></li>
+</ul></li>
+</ul>
+</section>
+<section id="sampling-ddpm-with-classifier" class="level4" data-number="2.5.0.2">
+<h4 data-number="2.5.0.2" class="anchored" data-anchor-id="sampling-ddpm-with-classifier"><span class="header-section-number">2.5.0.2</span> Sampling (DDPM with classifier)</h4>
+<ul>
+<li><strong>Given:</strong> 訓練好的 <span class="math inline">p_{\theta}(x_{t-1}\vert x_t)</span> (DDPM) 和 分類器 <span class="math inline">p_{\phi}(y\vert x_{t-1}).</span></li>
+<li><strong>Input:</strong> A label <span class="math inline">y</span> and a gradient scale <span class="math inline">s\in (1,\infty)</span></li>
+<li>Sample <span class="math inline">x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I}).</span></li>
+<li><strong>For</strong> <span class="math inline">t=T,T-1,\cdots,1</span>
+<ul>
+<li><span class="math inline">\mu,\Sigma \leftarrow \mu_{\theta}(x_t), \Sigma_{\theta}(x_t)</span></li>
+<li>Sample <span class="math inline">x_{t-1}\sim \mathcal{N}\bigl( \mu , \Sigma \bigr)</span>
+<ul>
+<li><strong>Comment</strong> Sample from unconditional diffusion model</li>
+</ul></li>
+<li><span class="math inline">x_{t-1}\leftarrow x_{t-1} + s \Sigma \nabla_{x_t} \log p_{\phi} (y\vert x_t)</span>
+<ul>
+<li><p><strong>Comment</strong> 有點像是對 <span class="math inline">p_{\theta,\phi}(x_{t-1}\vert x_t,y)</span> 做 gradient ascent, 增加 <span class="math inline">y</span> 的 log-likelihood. 引導 <span class="math inline">x_{t-1}</span> 向 label <span class="math inline">y</span> 的方向前進.</p>
+<!-- 可視為增加 $y$ 的影響力. $s=0$ 時就是 DDPM 的結果.  --></li>
+</ul></li>
+</ul>
+<!-- - Sample $x_{t-1}^{\text{uncond}}\sim \mathcal{N}\bigl( \mu + s \Sigma \nabla_{x_t} \log p_{\phi} (y\vert x_t) , \Sigma \bigr)$ --></li>
+<li><strong>EndFor</strong></li>
+<li><strong>Return</strong> <span class="math inline">x_0</span></li>
 </ul>
 <!-- 
 ## SNR
 
 Efficient Diffusion Training via Min-SNR Weighting Strategy 
 -->
+</section>
 </section>
 <section id="predict-velocity" class="level2" data-number="2.6">
 <h2 data-number="2.6" class="anchored" data-anchor-id="predict-velocity"><span class="header-section-number">2.6</span> Predict Velocity</h2>

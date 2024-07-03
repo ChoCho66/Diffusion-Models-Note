@@ -111,6 +111,9 @@
 \newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
+\usepackage{xeCJK}
+\usepackage{fontspec}
+\setCJKmonofont{STFangsong}
 \usepackage{arxiv}
 \usepackage{orcidlink}
 \usepackage{amsmath}
@@ -882,12 +885,12 @@ Dhariwal and Nichol (2021)
     \item
       For this example, \(0,1,\cdots, 9\) are
       \texttt{nn.Embedding(10,n)(torch.arange(10))}. （所以這裡 embed
-      也是要可學習的）。
+      也是要可學習的）.
     \end{itemize}
   \end{itemize}
 \item
-  Given \(Y = y.\) We want to generate an image \(x_0\) that has the
-  label \(y.\)
+  Given the label \(Y = y.\) We want to generate an image \(x_0\) which
+  has the label \(y.\)
 \item
   Assume that we already have \(\widehat{q}(y\vert x_0).\) That is, when
   we have \(x_0,\) we know the distribution of labels of \(x_0.\)
@@ -904,6 +907,11 @@ Dhariwal and Nichol (2021)
   \item
     \(q(x_t\vert x_{t-1})= \mathcal{N}(\sqrt{\alpha_t}x_{t-1}, (1-\alpha_t)\mathbf{I}).\)
   \end{itemize}
+\end{itemize}
+
+\paragraph{Important}\label{important}
+
+\begin{itemize}
 \item
   同樣地我們令 \(\lbrace X_t \rbrace_{t=0}^T\) 為時間 \(t\)
   時的加噪圖片, 只是加噪方式是如下:
@@ -928,6 +936,14 @@ Dhariwal and Nichol (2021)
   \item
     \(\widehat{q}(x_{1:T}\vert x_0,y):= \prod_{t=1}^T \widehat{q}(x_t\vert x_{t-1},y)\)
     (eq 31).
+
+    \begin{itemize}
+    \tightlist
+    \item
+      Conditioned on \(Y=y,\) the forward process \(X_0,X_1,\cdots,X_T\)
+      is a Markov chain with the transition density
+      \(q(x_t\vert x_{t-1}).\)
+    \end{itemize}
   \end{itemize}
 
   Note that \[
@@ -941,7 +957,6 @@ Dhariwal and Nichol (2021)
   For this \(\widehat{q},\) we have
 
   \begin{itemize}
-  \tightlist
   \item
     \(\widehat{q}(x_{t}\vert x_{t-1})=\widehat{q}(x_{t}\vert x_{t-1},y)\)
     (eq 32\textasciitilde37) \(= q(x_t\vert x_{t-1})\) (eq 30);
@@ -978,7 +993,81 @@ Dhariwal and Nichol (2021)
         這裡可以使用已經訓練好的 \(p_{\theta}\) (純粹DDPM的) 和 分類器.
       \end{itemize}
     \end{itemize}
+  \item
+    Define
+    \(p_{\theta,\phi}(x_{t-1}\vert x_t,y) = \text{constant}\cdot  p_{\theta}(x_{t-1}\vert x_{t}) \cdot p_{\phi}(y\vert x_{t-1}).\)
+    So when given the label \(y,\) we sample \(x_0\) (with label \(y\))
+    by the following:
+
+    \begin{itemize}
+    \tightlist
+    \item
+      \textbf{For} \(t=T,T-1,\cdots,1,\)
+
+      \begin{itemize}
+      \tightlist
+      \item
+        Sample \(x_t\sim p_{\theta,\phi}(x_{t-1}\vert x_t,y)\)
+      \end{itemize}
+    \item
+      \textbf{EndFor}
+    \end{itemize}
+
+    We organize the formula \(p_{\theta,\phi}(x_{t-1}\vert x_t,y).\)
+    Consider \(x_t, y\) as two given constants. Using a Taylor expansion
+    at \(x_{t-1}=\mu\) (some constant), we have \[
+    \begin{aligned}
+      \log p_{\phi}(y\vert x_{t-1}) 
+      &\approx  \log p_{\phi}(y\vert x_{t-1})\Big\vert_{x_{t-1}=\mu} + (x_{t-1}-\mu) \nabla_{x_{t-1}} \log p_{\phi}(y\vert x_{t-1})\Big\vert_{x_{t-1}=\mu} \cr
+      % &\approx  \log p_{\phi}(y\vert x_{t-1})\Big\vert_{x_{t-1}=\mu} + (x_{t-1}-\mu) \nabla_{x_{t}} \log p_{\phi}(y\vert x_{t})\Big\vert_{x_{t}=\mu} \cr  
+      &= (x_{t-1}-\mu) \cdot 
+    \end{aligned}
+    \]
   \end{itemize}
+\end{itemize}
+
+\paragraph{Sampling (DDPM with
+classifier)}\label{sampling-ddpm-with-classifier}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Given:} 訓練好的 \(p_{\theta}(x_{t-1}\vert x_t)\) (DDPM) 和
+  分類器 \(p_{\phi}(y\vert x_{t-1}).\)
+\item
+  \textbf{Input:} A label \(y\) and a gradient scale \(s\in (1,\infty)\)
+\item
+  Sample \(x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I}).\)
+\item
+  \textbf{For} \(t=T,T-1,\cdots,1\)
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \(\mu,\Sigma \leftarrow \mu_{\theta}(x_t), \Sigma_{\theta}(x_t)\)
+  \item
+    Sample \(x_{t-1}\sim \mathcal{N}\bigl( \mu , \Sigma \bigr)\)
+
+    \begin{itemize}
+    \tightlist
+    \item
+      \textbf{Comment} Sample from unconditional diffusion model
+    \end{itemize}
+  \item
+    \(x_{t-1}\leftarrow x_{t-1} + s \Sigma \nabla_{x_t} \log p_{\phi} (y\vert x_t)\)
+
+    \begin{itemize}
+    \item
+      \textbf{Comment} 有點像是對
+      \(p_{\theta,\phi}(x_{t-1}\vert x_t,y)\) 做 gradient ascent, 增加
+      \(y\) 的 log-likelihood. 引導 \(x_{t-1}\) 向 label \(y\)
+      的方向前進.
+    \end{itemize}
+  \end{itemize}
+\item
+  \textbf{EndFor}
+\item
+  \textbf{Return} \(x_0\)
 \end{itemize}
 
 \subsection{Predict Velocity}\label{predict-velocity}
