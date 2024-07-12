@@ -20,7 +20,7 @@
 \usepackage{lmodern}
 \ifPDFTeX\else  
     % xetex/luatex font selection
-  \setmainfont[]{Latin Modern Roman}
+    \setmainfont[]{Latin Modern Roman}
   \setmathfont[]{Latin Modern Math}
 \fi
 % Use upquote if available, for straight quotes in verbatim environments
@@ -43,14 +43,28 @@
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \setcounter{secnumdepth}{5}
 % Make \paragraph and \subparagraph free-standing
+\makeatletter
 \ifx\paragraph\undefined\else
   \let\oldparagraph\paragraph
-  \renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
 \fi
 \ifx\subparagraph\undefined\else
   \let\oldsubparagraph\subparagraph
-  \renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
 \fi
+\makeatother
 
 
 \providecommand{\tightlist}{%
@@ -111,9 +125,62 @@
 \newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
+% \renewenvironment{quote}{\begin{tcolorbox}[
+%   colback=white,
+%   enhanced jigsaw,
+%   breakable, 
+%   boxrule = 0pt,
+%   frame hidden,
+%   grow to left by=-1em,
+%   left=4pt,
+%   right=4pt,
+%   top=1pt,
+%   bottom=1pt,
+%   borderline west={0.5pt}{0pt}{black},
+%   arc = 0mm
+%   ]}
+% {\end{tcolorbox}}
+
 \usepackage{xeCJK}
 \usepackage{fontspec}
 \setCJKmonofont{STFangsong}
+\usepackage[most]{tcolorbox}
+
+\renewenvironment{vline}{\begin{tcolorbox}[
+  % \renewenvironment{vline}[1][]{\begin{tcolorbox}[
+    % title={#1},
+    % coltitle=blue!20!black,
+    colback=white,
+    enhanced jigsaw,
+    breakable, 
+    boxrule = 0pt,
+    frame hidden,
+    grow to left by=-1em,
+    left=4pt,
+    right=4pt,
+    top=1pt,
+    bottom=1pt,
+    borderline west={0.5pt}{0pt}{black},
+    arc = 0mm
+    ]}
+{\end{tcolorbox}}
+  
+  % \newcommand{\vtext}[1]{%
+  %   \raisebox{12ex}{\smash{\hspace{-3em}\small #1}}%
+  % }
+  
+\newcommand{\vtext}[1]{%
+  \makebox[0pt][l]{\raisebox{1.0ex}{\smash{\hspace{-2.5em}\scriptsize #1}}}%
+}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,      % 彩色連結而非框
+    linkcolor=blue,       % 內部連結的顏色
+    citecolor=blue,       % 引用連結的顏色
+    filecolor=magenta,    % 文件連結的顏色
+    urlcolor=cyan         % 網址連結的顏色
+}
 \usepackage{arxiv}
 \usepackage{orcidlink}
 \usepackage{amsmath}
@@ -172,6 +239,7 @@
 \makeatletter
 \@ifpackageloaded{algpseudocode}{}{\usepackage{algpseudocode}}
 \makeatother
+
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
@@ -181,7 +249,7 @@
 \urlstyle{same} % disable monospaced font for URLs
 \hypersetup{
   pdftitle={Diffusion Models Note},
-  pdfauthor={ChoCho},
+  pdfauthor={Kuan-Yu Cho},
   pdfkeywords={Diffusion Models},
   colorlinks=true,
   linkcolor={blue},
@@ -190,11 +258,12 @@
   urlcolor={Blue},
   pdfcreator={LaTeX via pandoc}}
 
+
 \newcommand{\runninghead}{A Preprint }
 \renewcommand{\runninghead}{A Preprint }
 \title{Diffusion Models Note}
 \def\asep{\\\\\\ } % default: all authors on same column
-\author{\textbf{ChoCho}\\Mathematics\\National Central
+\author{\textbf{Kuan-Yu Cho}\\Mathematics\\National Central
 University\\Taoyuan City
 320317\\\href{mailto:kycho@math.ncu.edu.tw}{kycho@math.ncu.edu.tw}}
 \date{}
@@ -214,18 +283,19 @@ Diffusion Models
 
 
 \renewcommand{\Return}{\State \textbf{return}~}
-\newcommand{\Print}{\State \textbf{print}~}
-\newcommand{\Break}{\State \textbf{break}}
-\newcommand{\Continue}{\State \textbf{continue}}
-\newcommand{\True}{\textbf{true}}
-\newcommand{\False}{\textbf{false}}
-\renewcommand{\And}{\textbf{and}~}
-\newcommand{\Or}{\textbf{or}~}
-\renewcommand{\Not}{\textbf{not}~}
-\newcommand{\To}{\textbf{to}~}
-\newcommand{\DownTo}{\textbf{downto}~}
+          \newcommand{\Print}{\State \textbf{print}~}
+          \newcommand{\Break}{\State \textbf{break}}
+          \newcommand{\Continue}{\State \textbf{continue}}
+          \newcommand{\True}{\textbf{true}}
+          \newcommand{\False}{\textbf{false}}
+          \renewcommand{\And}{\textbf{and}~}
+          \newcommand{\Or}{\textbf{or}~}
+          \renewcommand{\Not}{\textbf{not}~}
+          \newcommand{\To}{\textbf{to}~}
+          \newcommand{\DownTo}{\textbf{downto}~}
 
 \floatname{algorithm}{Algorithm}
+
 
 \section{Introduction}\label{introduction}
 
@@ -378,11 +448,9 @@ Then under \(\mathbf{Q},\)
 \(\underline{\overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})}.\)
 This implies that \(X_T\) converges in distribution to
 \(\mathcal{N}(\mathbf{0},\mathbf{I})\) under \(\mathbf{Q}\) for \(T\)
-large.
-
-Equation~\ref{eq-Xt-X0-Et} is a important relation between \(X_t\) and
-\(X_0\) and the noise \(\overline{\mathcal{E}}_t.\) For example, if we
-have an estimator of \(\overline{\mathcal{E}}_t,\) say
+large. Equation~\ref{eq-Xt-X0-Et} is a important relation between
+\(X_t\) and \(X_0\) and the noise \(\overline{\mathcal{E}}_t.\) For
+example, if we have an estimator of \(\overline{\mathcal{E}}_t,\) say
 \(\widehat{\overline{\mathcal{E}_t}},\) then by this relationship, we
 have an estimator
 \(\widehat{X}_0 = \widehat{X}_0\Bigl(X_t,\widehat{\overline{\mathcal{E}_t}}\Bigr)\)
@@ -424,8 +492,8 @@ properties of conditional density, we have \[
 \(x_{t-1}\sim q(x_{t-1}\vert x_t)\) through code since the expression of
 \(q(x_{t-1})/q(x_t)\) may be complicated. The way to solve this problem
 is that we assume there is another probability measure
-\(\mathbf{P}_{\theta}\) (this is our model, which can be sampled through
-code). There are several methods (SDE or just Taylor's theory, see TODO:
+\(\mathbf{P}_{\theta}\) which is our model and can be sampled through
+code. There are several methods (SDE or just Taylor's theory, see TODO:
 appendix) to show that we can approximate \(q(x_{t-1}\vert x_t)\) with a
 normal. Hence, we construct \(\mathbf{P}_{\theta}\) such that \[
 \begin{aligned}
@@ -472,7 +540,7 @@ the difference between \(p_{\theta}(x_0)\) and \(q(x_0)\) is the
 \[
 \begin{aligned}
   D_{\mathtt{KL}} \bigl( q(x_0) \Vert p_{\theta}(x_0) \bigr) 
-  = \int_{x_0\in \mathbb R^n} q(x_0) \log \frac{q(x_0)}{p_{\theta}(x_0)} \mathrm{d}x_0.
+  = - \int_{x_0\in \mathbb R^n} q(x_0) \log \frac{p_{\theta}(x_0)}{q(x_0)} \mathrm{d}x_0.
 \end{aligned}
 \] By the definition of the KL-divergence, \[
 \begin{aligned}
@@ -518,9 +586,8 @@ parts (for details, see TODO: appendix):
   \end{aligned}
   \] It is clear that \(\lim_{T\rightarrow\infty} L_t = 0.\) From the
   above formula, depending only on the \(L^2\)-norm of \(X_0,\) \(L_T\)
-  can be smaller if we shift \(X_0\) by its mean. We may see the case
-  \(n=1.\) TODO: 圖 For the question of how to choose the size of \(T\),
-  see TODO: ref.
+  can be smaller if we shift \(X_0\) by its mean. For the question of
+  how to choose the size of \(T\), see Franzese et al. (2023).
 \item
   The second term \(L_{t-1},\) \(t=2,\cdots,T,\) is the most important
   since it determines how to choose \(\mu_{\theta},\Sigma_{\theta}.\)
@@ -579,13 +646,15 @@ parts (for details, see TODO: appendix):
     = \frac{\sqrt{\overline{\alpha}_{t-1}}\beta_t}{1-\overline{\alpha}_t}\big\lVert X_0 - \widehat{X}_0(X_t) \big\rVert.
   \end{aligned}
   }\end{equation} Let
-  \(\mathtt{Net}_{\theta}:\mathbb R^n\times \lbrace 1,2,\cdots,T\rbrace\longrightarrow \mathbb R^n\)
+  \(\mathtt{Net}_{\theta}:\mathbb R^n\times \lbrace 1,2,\cdots,T\rbrace \longrightarrow \mathbb R^n\)
   be our neural network (with parameters \(\theta\)) we need to train.
   We can choose \(\mathtt{Net}_{\theta}\) to predict \(X_0,\) or
   \(\overline{\mathcal{E}}_t\) or the velocity \(V_t\) (see Hang et al.
   (2023)). DDPM chooses to predict the noise
-  \(\overline{\mathcal{E}}_t.\) Then by Equation~\ref{eq-estimator-X0},
-  we have the following relation
+  \(\overline{\mathcal{E}}_t.\) That is, we use
+  \(\mathtt{Net}_{\theta}(X_t,t)\) to be the character of
+  \(\widehat{\overline{\mathcal{E}_t}}\) in
+  Equation~\ref{eq-estimator-X0} and then we have the following relation
   \begin{equation}\phantomsection\label{eq-Net_asssume1}{
   \begin{aligned}
     X_t = \sqrt{\overline{\alpha}_t} \cdot \widehat{X}_0(X_t) + \sqrt{1-\overline{\alpha}_t} \cdot \mathtt{Net}_{\theta}(X_t,t).
@@ -646,7 +715,7 @@ parts (for details, see TODO: appendix):
 
 \subsection{Training and Sampling}\label{training-and-sampling}
 
-Note that we will minimize \(\mathbb E_{X\sim q(x)}[f_{\theta}(X)]\) by
+Note that we minimize \(\mathbb E_{X\sim q(x)}[f_{\theta}(X)]\) by
 \textbf{repeating} the following:
 
 \begin{itemize}
@@ -713,9 +782,9 @@ Therefore, our sampling algorithm is as follows:
 One of the major drawbacks of DDPM is the lengthy time required for data
 generation, especially when compared to other generative AI methods. In
 response to this issue, an improved version of DDPM, known as Denoising
-Diffusion Implicit Models (DDIM), was introduced by Song et al.~(Song,
-Meng, and Ermon (2022)). The primary innovation of DDIM is its ability
-to significantly accelerate the data generation process. By refining the
+Diffusion Implicit Models (DDIM), was introduced by Song, Meng, and
+Ermon (2022). The primary innovation of DDIM is its ability to
+significantly accelerate the data generation process. By refining the
 underlying diffusion mechanism, DDIM reduces the number of required
 diffusion steps without sacrificing the quality of the generated data.
 This breakthrough makes DDIM a more practical and efficient alternative
@@ -738,13 +807,14 @@ but has the same conditional density of \(X_{t}\) given \(X_0=x_0\) for
 each \(t\) as DDPM. Inspired by Equation~\ref{eq-q_prod}, DDIM directly
 defines the joint density \[
 \begin{aligned}
-  q_{\sigma}(x_{0:T}) := q_{\sigma}(x_T\vert x_0) \cdot \prod_{t=2}^T q_{\sigma}(x_{t-1}\vert x_t, x_0) \cdot q(x_0),
+  {\color{red}{q_{\sigma}(x_{0:T})}} := q_{\sigma}(x_T\vert x_0) \cdot \prod_{t=2}^T q_{\sigma}(x_{t-1}\vert x_t, x_0) \cdot q(x_0),
 \end{aligned}
 \] where
 \(q_{\sigma}(x_T\vert x_0):=\mathcal{N}(\sqrt{\overline{\alpha}_T}x_0,(1-\overline{\alpha}_T)\mathbf{I})\)
 and \[
 \begin{aligned}
-  q_{\sigma} (x_{t-1}\vert x_t,x_0) := \mathcal{N}\biggl( \sqrt{\overline{\alpha}_{t-1}}x_0 + \sqrt{1-\overline{\alpha}_{t-1} - \sigma_t^2} \cdot \frac{x_t-\sqrt{\overline{\alpha}_t}x_0}{\sqrt{1-\overline{\alpha}_t}} , \sigma_t^2 \mathbf{I} \biggr), \quad t=2,\cdots, T.
+  {\color{red}{q_{\sigma} (x_{t-1}\vert x_t,x_0)}}
+  := \mathcal{N}\biggl( \sqrt{\overline{\alpha}_{t-1}}x_0 + \sqrt{1-\overline{\alpha}_{t-1} - \sigma_t^2} \cdot \frac{x_t-\sqrt{\overline{\alpha}_t}x_0}{\sqrt{1-\overline{\alpha}_t}} , \sigma_t^2 \mathbf{I} \biggr), \quad t=2,\cdots, T.
 \end{aligned}
 \] Note that \(q_{\sigma}(x_{0:T})\) is a density since it is a product
 of densities. This seems a little weird that the joint density of
@@ -779,9 +849,11 @@ is a process satisfying the following conditions:
 
   Note that if we write
   \(q_{\sigma}(x_{t-1}\vert x_t,x_0)=\mathcal{N} \bigl(f(x_t,x_0,t), \sigma_t^2 \mathbf{I}\bigr),\)
-  then the process
-  \(\Bigl( \lbrace X_T,X_{T-1},\cdots, X_2,X_1\rbrace\Big\vert_{X_0=x_0}, \mathbf{Q}_{\sigma} \Bigr)\)
-  can be write as, conditioned on \(X_0=x_0,\) \[
+  then the process \[
+  \begin{aligned}
+    \Bigl( \lbrace X_T,X_{T-1},\cdots, X_2,X_1\rbrace\Big\vert_{X_0=x_0}, \mathbf{Q}_{\sigma} \Bigr)
+  \end{aligned}
+  \] can be write as, conditioned on \(X_0=x_0,\) \[
   \begin{aligned}
     X_{t-1} = f(X_t,x_0,t) + \sigma_t \xi_t, \quad t=T,\cdots, 2,
   \end{aligned}
@@ -837,16 +909,22 @@ decomposition \[
   \end{aligned}
   \] Under this \(\sigma,\) the process
   \(\bigl(\lbrace X_0,X_1,\cdots,X_T \rbrace,\mathbf{Q}_{\sigma}\bigr)\)
-  becomes a Markov chain, hence the DDIM becomes the original DDPM.
+  becomes a Markov chain and the DDIM becomes the original DDPM.
 \item
   The second one is \(\sigma_t = 0\) for \(t=1,2,\cdots, T.\) In this
   case, the backward process
   \(\bigl(\lbrace X_T,X_{T-1},\cdots,X_0 \rbrace,\mathbf{P}_{\theta}\bigr)\)
   becomes deterministic when we condition on \(X_T = x_T.\) This greatly
-  speeds up the sampling of diffusion models. In this case, we may write
-  \[
+  speeds up the sampling of diffusion models. In this case, \[
   \begin{aligned}
-    X_{t-1} = \sqrt{\overline{\alpha}_{t-1}} \widehat{X}_0 (X_t,t)  +  \sqrt{1-\overline{\alpha}_{t-1}} \cdot \mathtt{Net}_{\theta}(X_t,t), \quad t=T,T-1,\cdots, 1.
+    q_{\sigma}(x_{t-1}\vert x_t,x_0) 
+    &= \mathcal{N} \biggl( \sqrt{\overline{\alpha}_{t-1}}x_0 + \sqrt{1-\overline{\alpha}_{t-1} } \cdot \frac{x_t-\sqrt{\overline{\alpha}_t}x_0}{\sqrt{1-\overline{\alpha}_t}} \,\, , \,\, 0 \biggr) \cr 
+    &= \mathcal{N} \biggl( \Bigl( \sqrt{\overline{\alpha}_{t-1}} - \frac{\sqrt{\overline{\alpha}_t}}{\sqrt{1-\overline{\alpha}_t}}  \Bigr) x_0 \,\, + \,\, \frac{\sqrt{1-\overline{\alpha}_{t-1}}}{\sqrt{1-\overline{\alpha}_t}} x_t 
+    \,\, , \,\, 0 \biggr)  \cr
+    p_{\theta}(x_{t-1}\vert x_t)
+    &= \mathcal{N} \biggl(  
+      \frac{1}{\sqrt{\alpha_t}} x_t + \Bigl( \sqrt{1-\overline{\alpha}_{t-1}}-\frac{\sqrt{1-\overline{\alpha}_t}}{\sqrt{\alpha_t}} \Bigr) \cdot  \mathtt{Net}_{\theta}(x_t,t)
+      \,\, , \,\, 0 \biggr).
   \end{aligned}
   \]
 \end{itemize}
@@ -910,6 +988,10 @@ Dhariwal and Nichol (2021)
 \end{itemize}
 
 \paragraph{Important}\label{important}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \begin{itemize}
 \item
@@ -1183,6 +1265,12 @@ Models.''} \emph{Stochastic Processes and Their Applications} 12 (3):
 Dhariwal, Prafulla, and Alex Nichol. 2021. {``Diffusion Models Beat GANs
 on Image Synthesis.''} \url{https://arxiv.org/abs/2105.05233}.
 
+\bibitem[\citeproctext]{ref-franzese2023much}
+Franzese, Giulio, Simone Rossi, Lixuan Yang, Alessandro Finamore, Dario
+Rossi, Maurizio Filippone, and Pietro Michiardi. 2023. {``How Much Is
+Enough? A Study on Diffusion Times in Score-Based Generative Models.''}
+\emph{Entropy} 25 (4): 633.
+
 \bibitem[\citeproctext]{ref-goodfellow2014generative}
 Goodfellow, Ian J., Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David
 Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio. 2014.
@@ -1317,7 +1405,7 @@ Note that \[
 
 \subsection{SDE}\label{sde}
 
-If \((X_t)_{t\in [0,1]}\) satisfies the SDE \[
+Suppose that \((X_t)_{t\in [0,1]}\) satisfies the SDE \[
 \begin{aligned}
   \mathrm{d} X_t = \mu(X_t,t) \mathrm{d}t + \sigma(X_t,t) \mathrm{d}B_t,
 \end{aligned}
@@ -1337,7 +1425,7 @@ Motion. Let \(q(\cdot , t)\) be the density of \(X_t\) for each
     \overline{\sigma}(\cdot , t) &:= \sigma( \cdot , 1-t ).
   \end{aligned}
   \] Then by Anderson (1982), the \textbf{reverse process}
-  \((\overline{X}_t)_{t\in [0,1]}\) satisfies
+  \((\overline{X}_t)_{t\in [0,1]}\) satisfies the following SDE:
   \begin{equation}\phantomsection\label{eq-reverseSDE0}{
   \begin{aligned}
     \mathrm{d} \overline{X}_t 
@@ -1395,6 +1483,7 @@ Motion. Let \(q(\cdot , t)\) be the density of \(X_t\) for each
   &= q(x_T\vert x_0) \cdot \prod_{t=2}^{T} q(x_{t-1} \vert x_{t}, x_0)
 \end{aligned}
 \]
+
 
 
 

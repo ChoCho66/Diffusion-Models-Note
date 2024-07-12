@@ -1,0 +1,56 @@
+% \renewenvironment{quote}{\begin{tcolorbox}[
+%   colback=white,
+%   enhanced jigsaw,
+%   breakable, 
+%   boxrule = 0pt,
+%   frame hidden,
+%   grow to left by=-1em,
+%   left=4pt,
+%   right=4pt,
+%   top=1pt,
+%   bottom=1pt,
+%   borderline west={0.5pt}{0pt}{black},
+%   arc = 0mm
+%   ]}
+% {\end{tcolorbox}}
+
+\usepackage{xeCJK}
+\usepackage{fontspec}
+\setCJKmonofont{STFangsong}
+\usepackage[most]{tcolorbox}
+
+\renewenvironment{vline}{\begin{tcolorbox}[
+  % \renewenvironment{vline}[1][]{\begin{tcolorbox}[
+    % title={#1},
+    % coltitle=blue!20!black,
+    colback=white,
+    enhanced jigsaw,
+    breakable, 
+    boxrule = 0pt,
+    frame hidden,
+    grow to left by=-1em,
+    left=4pt,
+    right=4pt,
+    top=1pt,
+    bottom=1pt,
+    borderline west={0.5pt}{0pt}{black},
+    arc = 0mm
+    ]}
+{\end{tcolorbox}}
+  
+  % \newcommand{\vtext}[1]{%
+  %   \raisebox{12ex}{\smash{\hspace{-3em}\small #1}}%
+  % }
+  
+\newcommand{\vtext}[1]{%
+  \makebox[0pt][l]{\raisebox{1.0ex}{\smash{\hspace{-2.5em}\scriptsize #1}}}%
+}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,      % 彩色連結而非框
+    linkcolor=blue,       % 內部連結的顏色
+    citecolor=blue,       % 引用連結的顏色
+    filecolor=magenta,    % 文件連結的顏色
+    urlcolor=cyan         % 網址連結的顏色
+}

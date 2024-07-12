@@ -1,0 +1,153 @@
+
+\setcounter{section}{0}
+\renewcommand{\thesection}{\Alph{section}}
+\setcounter{table}{0}
+\renewcommand{\thetable}{A\arabic{table}}
+\setcounter{figure}{0}
+\renewcommand{\thefigure}{A\arabic{figure}}
+
+# Appendix {.appendix}
+
+## Markov property is equivalent to adding noise independently {#sec-markov-equivalent}
+
+Given the probability measure $\mathbf{Q}$ such that
+
+- $q(x_0)$ is the mass (respect to $\mathbf{Q}$) of our image data, and
+- $X_0,\mathcal{E}_1,\cdots,\mathcal{E}_T$ are independent under $\mathbf{Q},$ and
+- $\mathcal{E}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})$ under $\mathbf{Q}$ for $t=1,\cdots, T.$
+
+
+Under the assumptions above,
+we have the following properties under $\mathbf{Q}$:
+
+- Under $\mathbf{Q},$
+  if we set 
+  $$
+  \begin{aligned}
+    X_t = \sqrt{\overline{\alpha}_t}X_{0}+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t,
+  \end{aligned}
+  $$
+  then $X_0,$ $\overline{\mathcal{E}}_t$ are independent, and $\overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I}).$
+  Note that this property says that $q(x_T)\approx \mathcal{N}(\mathbf{\mathbf{0},\mathbf{I}})$ as $T$ large.
+
+- Under $\mathbf{Q},$ $\lbrace X_0,X_1,\cdots,X_T\rbrace$ is a Markov chain with the transition density
+  $$
+  \begin{aligned}
+    q(x_t\vert x_{t-1}) = \mathcal{N}(\sqrt{\alpha_t}x_{t-1},\beta_t \mathbf{I}).
+  \end{aligned}
+  $$
+
+::: {.remark}
+Note that the Markov property is equivalent to adding noise independently.
+That is, if $\bigl( \lbrace X_t\rbrace_{t=0}^T, \mathbf{Q} \bigr)$ is a Markov chain with the transition density
+$$
+\begin{aligned}
+  q(x_t\vert x_{t-1}) = \mathcal{N}(\sqrt{\alpha_t}x_{t-1},\beta_t \mathbf{I}).
+\end{aligned}
+$$
+and we set 
+$$
+\begin{aligned}
+  X_t = \sqrt{\overline{\alpha}_t}X_{0}+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t,
+\end{aligned}
+$$
+then 
+
+- $X_0,\mathcal{E}_1,\cdots,\mathcal{E}_T$ are independent under $\mathbf{Q},$ and
+- $\mathcal{E}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})$ under $\mathbf{Q}$ for $t=1,\cdots, T.$
+:::
+
+## $q(x_0) \approx p(x_0)$
+
+Note that
+$$
+\begin{aligned}
+  q(x_{0:3}) 
+  &= q(x_3\vert x_2) \cdot q(x_2\vert x_1) \cdot q(x_1\vert x_0) \cdot q(x_0) \cr 
+  &= \frac{q(x_3)}{q(x_2)}q(x_2\vert x_3) \cdot \frac{q(x_2)}{q(x_1)}q(x_1\vert x_2)\cdot \frac{q(x_1)}{q(x_0)} q(x_0\vert x_1) \cdot q(x_0) \cr 
+  &= q(x_0\vert x_1) \cdot q(x_1\vert x_2) \cdot q(x_2\vert x_3) \cdot \underbrace{q(x_3)}_{\approx \mathcal{N}(\mathbf{0},\mathbf{I})}
+\end{aligned}
+$$
+and
+$$
+\begin{aligned}
+  p(x_{0:3}) = q(x_0\vert x_1) \cdot q(x_1\vert x_2) \cdot q(x_2\vert x_3) \cdot \underbrace{p(x_3)}_{\mathcal{N}(\mathbf{0},\mathbf{I})}.
+\end{aligned}
+$$
+Then
+$$
+\begin{aligned}
+  q(x_0) = \int_{x_{1:3}} q(x_{0:3}) \, \mathrm{d}x_{0:3} \approx \int_{x_{1:3}} p(x_{1:3}) \, \mathrm{d}x_{0:3} = p(x_0).
+\end{aligned}
+$$
+
+## SDE
+
+Suppose that $(X_t)_{t\in [0,1]}$ satisfies the SDE
+$$
+\begin{aligned}
+  \mathrm{d} X_t = \mu(X_t,t) \mathrm{d}t + \sigma(X_t,t) \mathrm{d}B_t,
+\end{aligned}
+$$
+where $\mu(\cdot ,t):\mathbb R^n\longrightarrow \mathbb R^n$ and $\sigma(\cdot ,t): \mathbb R^n \longrightarrow \mathbb R^{n\times n}$ and $(B_t)_{t\in [0,1]}$ is a standard $n$-dimensional Brownian Motion.
+Let $q(\cdot , t)$ be the density of $X_t$ for each $t\in [0,1].$
+We have the following results:
+
+- For $t\in [0,1],$ we define
+  $$
+  \begin{aligned}
+    \overline{X}_t &:= X_{1-t}, \quad  &
+    \overline{q}(\cdot , t) &:= q(\cdot , 1-t), \quad\cr 
+    \overline{\mu}(\cdot , t) &:= \mu(\cdot , 1-t), \quad  &
+    \overline{\sigma}(\cdot , t) &:= \sigma( \cdot , 1-t ).
+  \end{aligned}
+  $$
+  Then by @ANDERSON1982313, 
+  the **reverse process** $(\overline{X}_t)_{t\in [0,1]}$ satisfies the following SDE:
+  $$
+  \begin{aligned}
+    \mathrm{d} \overline{X}_t 
+    &= \Bigl( \underbrace{-\overline{\mu}(X_t,t) + 
+      \overline{\sigma} \bigl( \overline{X}_t,t \bigr) \overline{\sigma} \bigl( \overline{X}_t,t \bigr)^{\mathtt{T}} \nabla_{x} \log \overline{q}\bigl( \overline{X}_t,t \bigr) 
+      + \nabla_x  \overline{\sigma} \bigl( \overline{X}_t,t \bigr) \overline{\sigma} \bigl( \overline{X}_t,t \bigr)^{\mathtt{T}}}_{\text{drift coefficient}}
+      \Bigr) \mathrm{d}t  \cr 
+    & \qquad + \underbrace{\overline{\sigma}\bigl( \overline{X}_t,t \bigr)}_{\text{diffusion coefficient}} \mathrm{d}\overline{B}_t,
+  \end{aligned}
+  $$ {#eq-reverseSDE0}
+  where $(\overline{B}_t)_{t\in [0,1]}$ is a standard $n$-dimensional Brownian Motion.
+  
+  - Note that the diffusion coefficient of the reverse process $\bigl( \overline{X}_t \bigr)_{t\in [0,1]}$ has the same form as $(X_t)_{t\in [0,1]}.$
+    This explains why it is reasonable to assume that $\Sigma_{\theta}(x,t)$ is independent of $x$ in @eq-Sig_the_indep_x.
+  
+  - If $\sigma(\cdot ,t)=\sigma(t)$ is independent of $x,$
+    then $\nabla_x  \overline{\sigma} \bigl( \overline{X}_t,t \bigr) \overline{\sigma} \bigl( \overline{X}_t,t \bigr)^{\mathtt{T}}=0$ 
+    and the drift coefficient of @eq-reverseSDE0 is the original average $-\overline{\mu}(X_t,t)$ guided by the score function $\nabla_{x} \log \overline{q}\bigl( \overline{X}_t,t \bigr).$
+
+- Consider a process $(\widetilde{X}_t)_{t\in[0,1]}$ satisfies the ODE
+  $$
+  \begin{aligned}
+    \mathrm{d}\widetilde{X}_t 
+    = \Bigl( \mu(\widetilde{X}_t, t) 
+    - \frac{1}{2} \sigma(\widetilde{X}_t,t) \sigma(\widetilde{X}_t,t)^{\mathtt{T}} \nabla_{x} \log q(\widetilde{X}_t,t) 
+    - \frac{1}{2} \nabla_x \sigma(\widetilde{X}_t,t) \sigma(\widetilde{X}_t,t)^{\mathtt{T}} \Bigr) \mathrm{d}t.
+  \end{aligned}
+  $$
+  Then for each $t\in [0,1],$ $X_t$ and $\widetilde{X}_t$ have the same distribution.
+  
+## Seperate $L$
+
+$$
+\begin{aligned}
+  L :=
+  \mathbb E_{X_{0:T}\sim q(x_{0:T})} \Bigl[ -\log \frac{p_{\theta}(X_{0:T})}{q(X_{1:T}\vert X_0)} \Bigr].
+\end{aligned}
+$$
+$$
+\begin{aligned}
+  p_{\theta}(x_{0:T}) &= p_{\theta}(x_T) \cdot \prod_{t=2}^T p_{\theta}(x_{t-1}\vert x_t) \cdot  p_{\theta}(x_0\vert x_1) , \cr 
+  q(x_{1:T}\vert x_0) &= \prod_{t=2}^{T} q(x_t \vert x_{t-1}) \cdot q(x_1\vert x_0) \cr 
+  &= \prod_{t=2}^{T} q(x_t \vert x_{t-1}, x_0) \cdot q(x_1\vert x_0) \cr 
+  &= \prod_{t=2}^{T} \frac{q(x_{t-1} \vert x_{t}, x_0) q(x_t\vert x_0) }{q(x_{t-1}\vert x_0)} \cdot q(x_1\vert x_0) \cr 
+  &= q(x_T\vert x_0) \cdot \prod_{t=2}^{T} q(x_{t-1} \vert x_{t}, x_0)
+\end{aligned}
+$$

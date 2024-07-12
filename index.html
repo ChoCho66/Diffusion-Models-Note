@@ -2,11 +2,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.554">
+<meta name="generator" content="quarto-1.5.53">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="ChoCho">
+<meta name="author" content="Kuan-Yu Cho">
 <meta name="keywords" content="Diffusion Models">
 
 <title>Diffusion Models Note</title>
@@ -58,7 +58,7 @@ div.csl-indent {
 <script src="index_files/libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.js"></script>
 <link href="index_files/libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.css" rel="stylesheet">
 
-  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js"></script>
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
  var mathElements = document.getElementsByClassName("math");
  var macros = [];
@@ -73,7 +73,7 @@ div.csl-indent {
    });
 }}});
   </script>
-  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css">
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
 
 <script type="text/javascript">
 const typesetMath = (el) => {
@@ -142,7 +142,7 @@ window.Quarto = {
   <div class="quarto-title-meta-heading">Affiliation</div>
   
     <div class="quarto-title-meta-contents">
-    <p class="author"><a href="https://github.com/ChoCho66/">ChoCho</a> <a href="mailto:kycho@math.ncu.edu.tw" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+    <p class="author"><a href="https://github.com/ChoCho66/">Kuan-Yu Cho</a> <a href="mailto:kycho@math.ncu.edu.tw" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
   </div>
   <div class="quarto-title-meta-contents">
         <p class="affiliation">
@@ -224,8 +224,16 @@ window.Quarto = {
 \begin{aligned}
   X_t = \sqrt{\overline{\alpha}_t}X_0 + \sqrt{1-\overline{\alpha}_t} \cdot \overline{\mathcal{E}}_t,
 \end{aligned}
-\tag{1}</span></span> where <span class="math inline">\overline{\alpha}_t = \alpha_t\cdot \alpha_{t-1}\cdots \alpha_1.</span> Then under <span class="math inline">\mathbf{Q},</span> <span class="math inline">\underline{\overline{\mathcal{E}}_t\perp X_0}</span> and <span class="math inline">\underline{\overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})}.</span> This implies that <span class="math inline">X_T</span> converges in distribution to <span class="math inline">\mathcal{N}(\mathbf{0},\mathbf{I})</span> under <span class="math inline">\mathbf{Q}</span> for <span class="math inline">T</span> large.</p>
-<p><a href="#eq-Xt-X0-Et" class="quarto-xref">Equation&nbsp;1</a> is a important relation between <span class="math inline">X_t</span> and <span class="math inline">X_0</span> and the noise <span class="math inline">\overline{\mathcal{E}}_t.</span> For example, if we have an estimator of <span class="math inline">\overline{\mathcal{E}}_t,</span> say <span class="math inline">\widehat{\overline{\mathcal{E}_t}},</span> then by this relationship, we have an estimator <span class="math inline">\widehat{X}_0 = \widehat{X}_0\Bigl(X_t,\widehat{\overline{\mathcal{E}_t}}\Bigr)</span> of <span class="math inline">X_0</span> satisfies the following: <span id="eq-estimator-X0"><span class="math display">
+\tag{1}</span></span> where <span class="math inline">\overline{\alpha}_t = \alpha_t\cdot \alpha_{t-1}\cdots \alpha_1.</span> Then under <span class="math inline">\mathbf{Q},</span> <span class="math inline">\underline{\overline{\mathcal{E}}_t\perp X_0}</span> and <span class="math inline">\underline{\overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})}.</span> This implies that <span class="math inline">X_T</span> converges in distribution to <span class="math inline">\mathcal{N}(\mathbf{0},\mathbf{I})</span> under <span class="math inline">\mathbf{Q}</span> for <span class="math inline">T</span> large. <!-- In actual programming, we will use the following code to implement @eq-Xt-X0-Et:
+```python
+def q_sample(self, x_start, t, noise=None):
+    noise = default(noise, lambda: torch.randn_like(x_start))
+
+    return (
+        extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
+        extract(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape) * noise
+    )
+``` --> <a href="#eq-Xt-X0-Et" class="quarto-xref">Equation&nbsp;1</a> is a important relation between <span class="math inline">X_t</span> and <span class="math inline">X_0</span> and the noise <span class="math inline">\overline{\mathcal{E}}_t.</span> For example, if we have an estimator of <span class="math inline">\overline{\mathcal{E}}_t,</span> say <span class="math inline">\widehat{\overline{\mathcal{E}_t}},</span> then by this relationship, we have an estimator <span class="math inline">\widehat{X}_0 = \widehat{X}_0\Bigl(X_t,\widehat{\overline{\mathcal{E}_t}}\Bigr)</span> of <span class="math inline">X_0</span> satisfies the following: <span id="eq-estimator-X0"><span class="math display">
 \begin{aligned}
   X_t = \sqrt{\overline{\alpha}_t} \widehat{X}_0 + \sqrt{1-\overline{\alpha}_t} \cdot \widehat{\overline{\mathcal{E}_t}}.
 \end{aligned}
@@ -242,7 +250,7 @@ window.Quarto = {
 \begin{aligned}
   q(x_{t-1}\vert x_t) = \frac{q(x_{t-1})}{q(x_t)} \cdot q(x_t\vert x_{t-1}).
 \end{aligned}
-</span> It’s not easy to use this formula to sample <span class="math inline">x_{t-1}\sim q(x_{t-1}\vert x_t)</span> through code since the expression of <span class="math inline">q(x_{t-1})/q(x_t)</span> may be complicated. The way to solve this problem is that we assume there is another probability measure <span class="math inline">\mathbf{P}_{\theta}</span> (this is our model, which can be sampled through code). There are several methods (SDE or just Taylor’s theory, see TODO: appendix) to show that we can approximate <span class="math inline">q(x_{t-1}\vert x_t)</span> with a normal. Hence, we construct <span class="math inline">\mathbf{P}_{\theta}</span> such that <span class="math display">
+</span> It’s not easy to use this formula to sample <span class="math inline">x_{t-1}\sim q(x_{t-1}\vert x_t)</span> through code since the expression of <span class="math inline">q(x_{t-1})/q(x_t)</span> may be complicated. The way to solve this problem is that we assume there is another probability measure <span class="math inline">\mathbf{P}_{\theta}</span> which is our model and can be sampled through code. There are several methods (SDE or just Taylor’s theory, see TODO: appendix) to show that we can approximate <span class="math inline">q(x_{t-1}\vert x_t)</span> with a normal. Hence, we construct <span class="math inline">\mathbf{P}_{\theta}</span> such that <span class="math display">
 \begin{aligned}
   p_{\theta}(x_{t-1}\vert x_t) = \mathcal{N}\bigl(x_{t-1}; \mu_{\theta}(x_t,t),\Sigma_{\theta}(x_t,t)\bigr),
 \end{aligned}
@@ -267,7 +275,7 @@ window.Quarto = {
 <p>Now <strong>our goal</strong> becomes to optimize <span class="math inline">\theta</span> such that <span class="math inline">p_{\theta}(x_0)\approx q(x_0)</span> in some sense. A common way to measure the difference between <span class="math inline">p_{\theta}(x_0)</span> and <span class="math inline">q(x_0)</span> is the <a href="https://en.wikipedia.org/wiki/Kullback–Leibler_divergence">KL-divergence</a> <span class="math display">
 \begin{aligned}
   D_{\mathtt{KL}} \bigl( q(x_0) \Vert p_{\theta}(x_0) \bigr)
-  = \int_{x_0\in \mathbb R^n} q(x_0) \log \frac{q(x_0)}{p_{\theta}(x_0)} \mathrm{d}x_0.
+  = - \int_{x_0\in \mathbb R^n} q(x_0) \log \frac{p_{\theta}(x_0)}{q(x_0)} \mathrm{d}x_0.
 \end{aligned}
 </span> By the definition of the KL-divergence, <span class="math display">
 \begin{aligned}
@@ -303,7 +311,7 @@ window.Quarto = {
 \begin{aligned}
   L_T = \frac{1}{2} \biggl( \log (1-\overline{\alpha}_T) + n \Bigl( \frac{1}{1-\overline{\alpha}_T} - 1 \Bigr) + \frac{\overline{\alpha}_T}{1-\overline{\alpha}_T} \mathbb E_{X_0\sim q(x_0)}\bigl[ \left\lVert X_0 \right\rVert^2 \bigr] \biggr).
 \end{aligned}
-</span> It is clear that <span class="math inline">\lim_{T\rightarrow\infty} L_t = 0.</span> From the above formula, depending only on the <span class="math inline">L^2</span>-norm of <span class="math inline">X_0,</span> <span class="math inline">L_T</span> can be smaller if we shift <span class="math inline">X_0</span> by its mean. We may see the case <span class="math inline">n=1.</span> TODO: 圖 For the question of how to choose the size of <span class="math inline">T</span>, see TODO: ref.</p></li>
+</span> It is clear that <span class="math inline">\lim_{T\rightarrow\infty} L_t = 0.</span> From the above formula, depending only on the <span class="math inline">L^2</span>-norm of <span class="math inline">X_0,</span> <span class="math inline">L_T</span> can be smaller if we shift <span class="math inline">X_0</span> by its mean. For the question of how to choose the size of <span class="math inline">T</span>, see <span class="citation" data-cites="franzese2023much">Franzese et al. (<a href="#ref-franzese2023much" role="doc-biblioref">2023</a>)</span>.</p></li>
 <li><p>The second term <span class="math inline">L_{t-1},</span> <span class="math inline">t=2,\cdots,T,</span> is the most important since it determines how to choose <span class="math inline">\mu_{\theta},\Sigma_{\theta}.</span> This term controls the similarity of <span class="math inline">X_{t-1}</span> in the forward and backward process. By Bayes’ rule and after a long calculation (see TODO: appendix), <span class="math display">
 \begin{aligned}
   {\color{red}{q(x_{t-1} \vert x_t,x_0)}} = \mathcal{N}\bigl( x_{t-1}; \mu_{t}(x_t,x_0),\Sigma_t \bigr),
@@ -316,7 +324,35 @@ window.Quarto = {
   \quad
   \Sigma_t = \frac{1-\overline{\alpha}_{t-1}}{1-\overline{\alpha}_t}\beta_t \mathbf{I}.
 \end{aligned}
-\tag{4}</span></span></p>
+\tag{4}</span></span> <!-- In programming, we have the following code:
+  ```python
+  register_buffer('posterior_mean_coef1', betas *
+                  torch.sqrt(alphas_cumprod_prev) / (1. - alphas_cumprod))
+  register_buffer('posterior_mean_coef2', (1. - alphas_cumprod_prev)
+                  * torch.sqrt(alphas) / (1. - alphas_cumprod))
+  ```
+  and
+  ```python
+  def q_posterior(self, x_start, x_t, t):
+      posterior_mean = (
+          extract(self.posterior_mean_coef1, t, x_t.shape) * x_start +
+          extract(self.posterior_mean_coef2, t, x_t.shape) * x_t
+      )
+      posterior_variance = extract(self.posterior_variance, t, x_t.shape)
+      posterior_log_variance_clipped = extract(
+          self.posterior_log_variance_clipped, t, x_t.shape)
+      return posterior_mean, posterior_variance, posterior_log_variance_clipped
+  ```
+  Here,
+  $$
+  \begin{aligned}
+    \underbrace{\mu_{t}(x_t,x_0)}_{\mathtt{posterior\_mean}}  
+    &= \underbrace{\frac{\sqrt{\alpha_t}(1-\overline{\alpha}_{t-1})}{1-\overline{\alpha}_t}}_{\mathtt{posterior\_mean\_coef2}} \cdot x_t 
+    + \underbrace{\frac{\sqrt{\overline{\alpha}_{t-1}}\beta_t}{1-\overline{\alpha}_t}}_{\mathtt{posterior\_mean\_coef1}} \cdot x_0 ,  \cr
+    \cr
+    \underbrace{\Sigma_t}_{\mathtt{posterior\_variance}} &= \frac{1-\overline{\alpha}_{t-1}}{1-\overline{\alpha}_t}\beta_t \mathbf{I}.
+  \end{aligned}
+  $$ --></p>
 <h3 id="to-determine-sigma_theta-for-tgeq-2" data-number="2.2.1" class="anchored"><span class="header-section-number">2.2.1</span> To determine <span class="math inline">\Sigma_{\theta}</span> for <span class="math inline">t\geq 2</span></h3>
 <p>Since both <span class="math inline">q(x_{t-1}\vert x_t, x_0),\, p_{\theta}(x_{t-1}\vert x_t)</span> are normal, it is natural to choose <span id="eq-Sig_the_indep_x"><span class="math display">
 \begin{aligned}
@@ -341,7 +377,7 @@ window.Quarto = {
   \bigl\lVert \mu_t(X_t,X_0) - \mu_{\theta}(X_t,t)  \bigr\rVert
   = \frac{\sqrt{\overline{\alpha}_{t-1}}\beta_t}{1-\overline{\alpha}_t}\big\lVert X_0 - \widehat{X}_0(X_t) \big\rVert.
 \end{aligned}
-\tag{7}</span></span> Let <span class="math inline">\mathtt{Net}_{\theta}:\mathbb R^n\times \lbrace 1,2,\cdots,T\rbrace\longrightarrow \mathbb R^n</span> be our neural network (with parameters <span class="math inline">\theta</span>) we need to train. We can choose <span class="math inline">\mathtt{Net}_{\theta}</span> to predict <span class="math inline">X_0,</span> or <span class="math inline">\overline{\mathcal{E}}_t</span> or the velocity <span class="math inline">V_t</span> (see <span class="citation" data-cites="SNR">Hang et al. (<a href="#ref-SNR" role="doc-biblioref">2023</a>)</span>). DDPM chooses to predict the noise <span class="math inline">\overline{\mathcal{E}}_t.</span> Then by <a href="#eq-estimator-X0" class="quarto-xref">Equation&nbsp;2</a>, we have the following relation <span id="eq-Net_asssume1"><span class="math display">
+\tag{7}</span></span> Let <span class="math inline">\mathtt{Net}_{\theta}:\mathbb R^n\times \lbrace 1,2,\cdots,T\rbrace \longrightarrow \mathbb R^n</span> be our neural network (with parameters <span class="math inline">\theta</span>) we need to train. We can choose <span class="math inline">\mathtt{Net}_{\theta}</span> to predict <span class="math inline">X_0,</span> or <span class="math inline">\overline{\mathcal{E}}_t</span> or the velocity <span class="math inline">V_t</span> (see <span class="citation" data-cites="SNR">Hang et al. (<a href="#ref-SNR" role="doc-biblioref">2023</a>)</span>). DDPM chooses to predict the noise <span class="math inline">\overline{\mathcal{E}}_t.</span> That is, we use <span class="math inline">\mathtt{Net}_{\theta}(X_t,t)</span> to be the character of <span class="math inline">\widehat{\overline{\mathcal{E}_t}}</span> in <a href="#eq-estimator-X0" class="quarto-xref">Equation&nbsp;2</a> and then we have the following relation <span id="eq-Net_asssume1"><span class="math display">
 \begin{aligned}
   X_t = \sqrt{\overline{\alpha}_t} \cdot \widehat{X}_0(X_t) + \sqrt{1-\overline{\alpha}_t} \cdot \mathtt{Net}_{\theta}(X_t,t).
 \end{aligned}
@@ -390,7 +426,7 @@ window.Quarto = {
 </section>
 <section id="training-and-sampling" class="level2" data-number="2.3">
 <h2 data-number="2.3" class="anchored" data-anchor-id="training-and-sampling"><span class="header-section-number">2.3</span> Training and Sampling</h2>
-<p>Note that we will minimize <span class="math inline">\mathbb E_{X\sim q(x)}[f_{\theta}(X)]</span> by <strong>repeating</strong> the following: <!-- **until** converge: --></p>
+<p>Note that we minimize <span class="math inline">\mathbb E_{X\sim q(x)}[f_{\theta}(X)]</span> by <strong>repeating</strong> the following: <!-- **until** converge: --></p>
 <ul>
 <li>Sampling <span class="math inline">x\sim q(x)</span> and then</li>
 <li>minimizing <span class="math inline">f_{\theta}(x)</span> by taking gradient descent on <span class="math inline">\theta.</span></li>
@@ -404,7 +440,7 @@ window.Quarto = {
   L_{t-1}^{\text{simple}} = \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\ X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \biggl(  \Big\lVert \overline{\mathcal{E}}_t - \mathtt{Net}_{\theta}(X_t,t) \Big\rVert^2 \biggr).
 \end{aligned}
 </span> <span class="math inline">L_0</span> is the same. Therefore, our training algorithm is as follows:</p>
-<div id="alg-test-text-style" class="pseudocode-container" data-indent-size="1.2em" data-pseudocode-index="1" data-comment-delimiter="▷" data-line-number-punc=":" data-line-number="true" data-alg-title="Algorithm" data-no-end="false">
+<div id="alg-test-text-style" class="pseudocode-container" data-indent-size="1.2em" data-no-end="false" data-line-number-punc=":" data-alg-title="Algorithm" data-comment-delimiter="▷" data-line-number="true" data-pseudocode-index="1">
 <div class="pseudocode">
 \begin{algorithm} \caption{Training (DDPM)} \begin{algorithmic} \Repeat\State $t\sim \text{Uniform}(\lbrace 1,\cdots,T \rbrace)$\Comment{ Sample random step}\State $x_0\sim q(x_0)$\Comment{ Sample random initial image}\State $\overline{\varepsilon}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})$\Comment{ Sample random noise}\State $x_t = \sqrt{\overline{\alpha}_t}x_0 + \sqrt{1-\overline{\alpha}_t}\cdot \overline{\varepsilon}_t$\State Take gradient descent step on $\Bigl\lVert \overline{\varepsilon}_t - \mathtt{Net}_{\theta}(x_t,t) \Bigr\rVert^2$\Comment{ Optimization}\Until{ converged} \end{algorithmic} \end{algorithm}
 </div>
@@ -422,7 +458,7 @@ window.Quarto = {
 \end{aligned}
 </span></p>
 <p>Therefore, our sampling algorithm is as follows:</p>
-<div id="alg-diffusion-model-sampling-shortly" class="pseudocode-container" data-indent-size="1.2em" data-pseudocode-index="2" data-comment-delimiter="▷" data-line-number-punc=":" data-line-number="true" data-alg-title="Algorithm" data-no-end="false">
+<div id="alg-diffusion-model-sampling-shortly" class="pseudocode-container" data-indent-size="1.2em" data-no-end="false" data-line-number-punc=":" data-alg-title="Algorithm" data-comment-delimiter="▷" data-line-number="true" data-pseudocode-index="2">
 <div class="pseudocode">
 \begin{algorithm} \caption{Sampling (DDPM)} \begin{algorithmic} \State $x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I})$\For{ $t=T,\cdots,1$}\If{ $t&gt;1$}\State $z \sim \mathcal{N}(\mathbf{0},\mathbf{I})$\Else\State $z= \mathbf{0}$\EndIf\State $x_{t-1}=\frac{1}{\sqrt{\alpha_t}}\Big(x_t-\frac{1-\alpha_t}{\sqrt{1-\overline{\alpha}_t}}\mathtt{Net}_{\theta}(x_t,t)\Big)+\sigma_t z$\EndFor\Return $x_0$ \end{algorithmic} \end{algorithm}
 </div>
@@ -430,7 +466,7 @@ window.Quarto = {
 </section>
 <section id="sec-DDIM" class="level2" data-number="2.4">
 <h2 data-number="2.4" class="anchored" data-anchor-id="sec-DDIM"><span class="header-section-number">2.4</span> DDIM</h2>
-<p>One of the major drawbacks of DDPM is the lengthy time required for data generation, especially when compared to other generative AI methods. In response to this issue, an improved version of DDPM, known as Denoising Diffusion Implicit Models (DDIM), was introduced by Song et al.&nbsp;(<span class="citation" data-cites="song2022denoising">Song, Meng, and Ermon (<a href="#ref-song2022denoising" role="doc-biblioref">2022</a>)</span>). The primary innovation of DDIM is its ability to significantly accelerate the data generation process. By refining the underlying diffusion mechanism, DDIM reduces the number of required diffusion steps without sacrificing the quality of the generated data. This breakthrough makes DDIM a more practical and efficient alternative for generative AI tasks, offering faster performance while maintaining high-quality outputs.</p>
+<p>One of the major drawbacks of DDPM is the lengthy time required for data generation, especially when compared to other generative AI methods. In response to this issue, an improved version of DDPM, known as Denoising Diffusion Implicit Models (DDIM), was introduced by <span class="citation" data-cites="song2022denoising">Song, Meng, and Ermon (<a href="#ref-song2022denoising" role="doc-biblioref">2022</a>)</span>. The primary innovation of DDIM is its ability to significantly accelerate the data generation process. By refining the underlying diffusion mechanism, DDIM reduces the number of required diffusion steps without sacrificing the quality of the generated data. This breakthrough makes DDIM a more practical and efficient alternative for generative AI tasks, offering faster performance while maintaining high-quality outputs.</p>
 <p>Now we introduce the DDIM. The main reason why we can decompose <span class="math inline">L</span> in <a href="#eq-decom-L" class="quarto-xref">Equation&nbsp;3</a> in DDPM is that we have the following production of two densities: <span id="eq-q_prod"><span class="math display">
 \begin{aligned}
   p_{\theta}(x_{0:T}) &amp;= p_{\theta}(x_T) \cdot \prod_{t=2}^T p_{\theta}(x_{t-1}\vert x_t) \cdot  p_{\theta}(x_0\vert x_1) , \cr
@@ -438,11 +474,12 @@ window.Quarto = {
 \end{aligned}
 \tag{9}</span></span> DDIM consider a new forward process <span class="math inline">\bigl( \lbrace X_0,X_1,\cdots,X_T\rbrace, \mathbf{Q}_{\sigma} \bigr),</span> where <span class="math inline">\mathbf{Q}_{\sigma}</span> is some probability measure indexed by <span class="math inline">\sigma\in [0,\infty)^T</span>. The forward process is not a Markov chain but has the same conditional density of <span class="math inline">X_{t}</span> given <span class="math inline">X_0=x_0</span> for each <span class="math inline">t</span> as DDPM. Inspired by <a href="#eq-q_prod" class="quarto-xref">Equation&nbsp;9</a>, DDIM directly defines the joint density <span class="math display">
 \begin{aligned}
-  q_{\sigma}(x_{0:T}) := q_{\sigma}(x_T\vert x_0) \cdot \prod_{t=2}^T q_{\sigma}(x_{t-1}\vert x_t, x_0) \cdot q(x_0),
+  {\color{red}{q_{\sigma}(x_{0:T})}} := q_{\sigma}(x_T\vert x_0) \cdot \prod_{t=2}^T q_{\sigma}(x_{t-1}\vert x_t, x_0) \cdot q(x_0),
 \end{aligned}
 </span> where <span class="math inline">q_{\sigma}(x_T\vert x_0):=\mathcal{N}(\sqrt{\overline{\alpha}_T}x_0,(1-\overline{\alpha}_T)\mathbf{I})</span> and <span class="math display">
 \begin{aligned}
-  q_{\sigma} (x_{t-1}\vert x_t,x_0) := \mathcal{N}\biggl( \sqrt{\overline{\alpha}_{t-1}}x_0 + \sqrt{1-\overline{\alpha}_{t-1} - \sigma_t^2} \cdot \frac{x_t-\sqrt{\overline{\alpha}_t}x_0}{\sqrt{1-\overline{\alpha}_t}} , \sigma_t^2 \mathbf{I} \biggr), \quad t=2,\cdots, T.
+  {\color{red}{q_{\sigma} (x_{t-1}\vert x_t,x_0)}}
+  := \mathcal{N}\biggl( \sqrt{\overline{\alpha}_{t-1}}x_0 + \sqrt{1-\overline{\alpha}_{t-1} - \sigma_t^2} \cdot \frac{x_t-\sqrt{\overline{\alpha}_t}x_0}{\sqrt{1-\overline{\alpha}_t}} , \sigma_t^2 \mathbf{I} \biggr), \quad t=2,\cdots, T.
 \end{aligned}
 </span> Note that <span class="math inline">q_{\sigma}(x_{0:T})</span> is a density since it is a product of densities. This seems a little weird that the joint density of <span class="math inline">q_{\sigma}(x_{0:T})</span> is determined by some conditional density. In fact, <span class="math inline">\bigl(\lbrace X_0,X_1,\cdots,X_T \rbrace,\mathbf{Q}_{\sigma}\bigr)</span> is a process satisfying the following conditions:</p>
 <ol type="1">
@@ -456,7 +493,11 @@ window.Quarto = {
 \end{aligned}
 </span></li>
 </ul>
-Note that if we write <span class="math inline">q_{\sigma}(x_{t-1}\vert x_t,x_0)=\mathcal{N} \bigl(f(x_t,x_0,t), \sigma_t^2 \mathbf{I}\bigr),</span> then the process <span class="math inline">\Bigl( \lbrace X_T,X_{T-1},\cdots, X_2,X_1\rbrace\Big\vert_{X_0=x_0}, \mathbf{Q}_{\sigma} \Bigr)</span> can be write as, conditioned on <span class="math inline">X_0=x_0,</span> <span class="math display">
+Note that if we write <span class="math inline">q_{\sigma}(x_{t-1}\vert x_t,x_0)=\mathcal{N} \bigl(f(x_t,x_0,t), \sigma_t^2 \mathbf{I}\bigr),</span> then the process <span class="math display">
+\begin{aligned}
+  \Bigl( \lbrace X_T,X_{T-1},\cdots, X_2,X_1\rbrace\Big\vert_{X_0=x_0}, \mathbf{Q}_{\sigma} \Bigr)
+\end{aligned}
+</span> can be write as, conditioned on <span class="math inline">X_0=x_0,</span> <span class="math display">
 \begin{aligned}
   X_{t-1} = f(X_t,x_0,t) + \sigma_t \xi_t, \quad t=T,\cdots, 2,
 \end{aligned}
@@ -499,13 +540,28 @@ Note that if we write <span class="math inline">q_{\sigma}(x_{t-1}\vert x_t,x_0)
 \begin{aligned}
   \sigma_t = \sqrt{(1-\overline{\alpha}_{t-1})/(1-\overline{\alpha}_t)} \sqrt{ 1-\alpha_t }, \quad t = 1,\cdots, T.
 \end{aligned}
-</span> Under this <span class="math inline">\sigma,</span> the process <span class="math inline">\bigl(\lbrace X_0,X_1,\cdots,X_T \rbrace,\mathbf{Q}_{\sigma}\bigr)</span> becomes a Markov chain, hence the DDIM becomes the original DDPM.</p></li>
-<li><p>The second one is <span class="math inline">\sigma_t = 0</span> for <span class="math inline">t=1,2,\cdots, T.</span> In this case, the backward process <span class="math inline">\bigl(\lbrace X_T,X_{T-1},\cdots,X_0 \rbrace,\mathbf{P}_{\theta}\bigr)</span> becomes deterministic when we condition on <span class="math inline">X_T = x_T.</span> This greatly speeds up the sampling of diffusion models. In this case, we may write <span class="math display">
+</span> Under this <span class="math inline">\sigma,</span> the process <span class="math inline">\bigl(\lbrace X_0,X_1,\cdots,X_T \rbrace,\mathbf{Q}_{\sigma}\bigr)</span> becomes a Markov chain and the DDIM becomes the original DDPM.</p></li>
+<li><p>The second one is <span class="math inline">\sigma_t = 0</span> for <span class="math inline">t=1,2,\cdots, T.</span> In this case, the backward process <span class="math inline">\bigl(\lbrace X_T,X_{T-1},\cdots,X_0 \rbrace,\mathbf{P}_{\theta}\bigr)</span> becomes deterministic when we condition on <span class="math inline">X_T = x_T.</span> This greatly speeds up the sampling of diffusion models. In this case, <span class="math display">
 \begin{aligned}
-  X_{t-1} = \sqrt{\overline{\alpha}_{t-1}} \widehat{X}_0 (X_t,t)  +  \sqrt{1-\overline{\alpha}_{t-1}} \cdot \mathtt{Net}_{\theta}(X_t,t), \quad t=T,T-1,\cdots, 1.
+  q_{\sigma}(x_{t-1}\vert x_t,x_0)
+  &amp;= \mathcal{N} \biggl( \sqrt{\overline{\alpha}_{t-1}}x_0 + \sqrt{1-\overline{\alpha}_{t-1} } \cdot \frac{x_t-\sqrt{\overline{\alpha}_t}x_0}{\sqrt{1-\overline{\alpha}_t}} \,\, , \,\, 0 \biggr) \cr
+  &amp;= \mathcal{N} \biggl( \Bigl( \sqrt{\overline{\alpha}_{t-1}} - \frac{\sqrt{\overline{\alpha}_t}}{\sqrt{1-\overline{\alpha}_t}}  \Bigr) x_0 \,\, + \,\, \frac{\sqrt{1-\overline{\alpha}_{t-1}}}{\sqrt{1-\overline{\alpha}_t}} x_t
+  \,\, , \,\, 0 \biggr)  \cr
+  p_{\theta}(x_{t-1}\vert x_t)
+  &amp;= \mathcal{N} \biggl(  
+    \frac{1}{\sqrt{\alpha_t}} x_t + \Bigl( \sqrt{1-\overline{\alpha}_{t-1}}-\frac{\sqrt{1-\overline{\alpha}_t}}{\sqrt{\alpha_t}} \Bigr) \cdot  \mathtt{Net}_{\theta}(x_t,t)
+    \,\, , \,\, 0 \biggr).
 \end{aligned}
 </span></p></li>
 </ul>
+<!--   
+  we may write
+  $$
+  \begin{aligned}
+    X_{t-1} = \sqrt{\overline{\alpha}_{t-1}} \widehat{X}_0 (X_t,t)  +  \sqrt{1-\overline{\alpha}_{t-1}} \cdot \mathtt{Net}_{\theta}(X_t,t), \quad t=T,T-1,\cdots, 1.
+  \end{aligned}
+  $$ 
+-->
 </section>
 <section id="sec-cdm" class="level2" data-number="2.5">
 <h2 data-number="2.5" class="anchored" data-anchor-id="sec-cdm"><span class="header-section-number">2.5</span> Conditional Diffusion Model</h2>
@@ -536,6 +592,8 @@ Note that if we write <span class="math inline">q_{\sigma}(x_{t-1}\vert x_t,x_0)
 </ul>
 <section id="important" class="level4" data-number="2.5.0.1">
 <h4 data-number="2.5.0.1" class="anchored" data-anchor-id="important"><span class="header-section-number">2.5.0.1</span> Important</h4>
+<hr>
+<hr>
 <ul>
 <li><p>同樣地我們令 <span class="math inline">\lbrace X_t \rbrace_{t=0}^T</span> 為時間 <span class="math inline">t</span> 時的加噪圖片, 只是加噪方式是如下:</p>
 <p><strong>Define</strong> the forward process of <span class="math inline">(X_{0:T},Y)</span> by the following:</p>
@@ -705,6 +763,9 @@ Anderson, Brian D. O. 1982. <span>“Reverse-Time Diffusion Equation Models.”<
 <div id="ref-dhariwal2021diffusion" class="csl-entry" role="listitem">
 Dhariwal, Prafulla, and Alex Nichol. 2021. <span>“Diffusion Models Beat GANs on Image Synthesis.”</span> <a href="https://arxiv.org/abs/2105.05233">https://arxiv.org/abs/2105.05233</a>.
 </div>
+<div id="ref-franzese2023much" class="csl-entry" role="listitem">
+Franzese, Giulio, Simone Rossi, Lixuan Yang, Alessandro Finamore, Dario Rossi, Maurizio Filippone, and Pietro Michiardi. 2023. <span>“How Much Is Enough? A Study on Diffusion Times in Score-Based Generative Models.”</span> <em>Entropy</em> 25 (4). MDPI: 633.
+</div>
 <div id="ref-goodfellow2014generative" class="csl-entry" role="listitem">
 Goodfellow, Ian J., Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio. 2014. <span>“Generative Adversarial Networks.”</span> <a href="https://arxiv.org/abs/1406.2661">https://arxiv.org/abs/1406.2661</a>.
 </div>
@@ -788,7 +849,7 @@ Song, Jiaming, Chenlin Meng, and Stefano Ermon. 2022. <span>“Denoising Diffusi
 </section>
 <section id="sde" class="level2" data-number="5.3">
 <h2 data-number="5.3" class="anchored" data-anchor-id="sde"><span class="header-section-number">5.3</span> SDE</h2>
-<p>If <span class="math inline">(X_t)_{t\in [0,1]}</span> satisfies the SDE <span class="math display">
+<p>Suppose that <span class="math inline">(X_t)_{t\in [0,1]}</span> satisfies the SDE <span class="math display">
 \begin{aligned}
   \mathrm{d} X_t = \mu(X_t,t) \mathrm{d}t + \sigma(X_t,t) \mathrm{d}B_t,
 \end{aligned}
@@ -801,7 +862,7 @@ Song, Jiaming, Chenlin Meng, and Stefano Ermon. 2022. <span>“Denoising Diffusi
   \overline{\mu}(\cdot , t) &amp;:= \mu(\cdot , 1-t), \quad  &amp;
   \overline{\sigma}(\cdot , t) &amp;:= \sigma( \cdot , 1-t ).
 \end{aligned}
-</span> Then by <span class="citation" data-cites="ANDERSON1982313">Anderson (<a href="#ref-ANDERSON1982313" role="doc-biblioref">1982</a>)</span>, the <strong>reverse process</strong> <span class="math inline">(\overline{X}_t)_{t\in [0,1]}</span> satisfies <span id="eq-reverseSDE0"><span class="math display">
+</span> Then by <span class="citation" data-cites="ANDERSON1982313">Anderson (<a href="#ref-ANDERSON1982313" role="doc-biblioref">1982</a>)</span>, the <strong>reverse process</strong> <span class="math inline">(\overline{X}_t)_{t\in [0,1]}</span> satisfies the following SDE: <span id="eq-reverseSDE0"><span class="math display">
 \begin{aligned}
   \mathrm{d} \overline{X}_t
   &amp;= \Bigl( \underbrace{-\overline{\mu}(X_t,t) +
@@ -879,18 +940,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -922,7 +972,29 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
       var filterRegex = new RegExp('/' + window.location.host + '/');
@@ -930,7 +1002,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
     // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
     for (var i=0; i<links.length; i++) {
       const link = links[i];
       if (!isInternal(link.href)) {

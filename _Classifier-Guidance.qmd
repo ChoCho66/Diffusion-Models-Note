@@ -32,6 +32,11 @@
   - $q(x_t\vert x_{t-1})= \mathcal{N}(\sqrt{\alpha_t}x_{t-1}, (1-\alpha_t)\mathbf{I}).$
 
 #### Important
+
+---
+
+---
+
 - 同樣地我們令 $\lbrace X_t \rbrace_{t=0}^T$ 為時間 $t$ 時的加噪圖片, 只是加噪方式是如下:
 
   **Define** the forward process of $(X_{0:T},Y)$ by the following:
