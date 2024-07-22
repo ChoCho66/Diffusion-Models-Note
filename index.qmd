@@ -184,8 +184,7 @@ We will use this relationship when we reparameterize our model.
 
 
 ## Backward process
-In the backward process, 
-we remove the noise according to the current image.
+In the backward process, we remove the noise according to the current image.
 This can also be described by the Markov chain.
 Ideally we define the **backward process** $\bigl( \lbrace X_T,X_{T-1},\cdots,X_1,X_0 \rbrace, \mathbf{P} \bigr)$ as a Markov chain with the initial distribution $p(x_T) = \mathcal{N}(\mathbf{0},\mathbf{I})$ and the transition density $p(x_{t-1}\vert x_t)=q(x_{t-1}\vert x_t).$
 In this assumption, we have $p(x_0)\approx q(x_0)$ in some sense of distribution (see TODO: appendix).

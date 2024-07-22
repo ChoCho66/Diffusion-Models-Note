@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.5.53">
+<meta name="generator" content="quarto-1.5.55">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -440,7 +440,7 @@ def q_sample(self, x_start, t, noise=None):
   L_{t-1}^{\text{simple}} = \mathbb E_{\substack{X_0\sim q(x_0), \overline{\mathcal{E}}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})\\ X_0,\overline{\mathcal{E}}_t \text{ are independent} \\ X_t=\sqrt{\overline{\alpha}_t}X_0+\sqrt{1-\overline{\alpha}_t}\cdot \overline{\mathcal{E}}_t}} \biggl(  \Big\lVert \overline{\mathcal{E}}_t - \mathtt{Net}_{\theta}(X_t,t) \Big\rVert^2 \biggr).
 \end{aligned}
 </span> <span class="math inline">L_0</span> is the same. Therefore, our training algorithm is as follows:</p>
-<div id="alg-test-text-style" class="pseudocode-container" data-indent-size="1.2em" data-no-end="false" data-line-number-punc=":" data-alg-title="Algorithm" data-comment-delimiter="▷" data-line-number="true" data-pseudocode-index="1">
+<div id="alg-test-text-style" class="pseudocode-container" data-indent-size="1.2em" data-alg-title="Algorithm" data-pseudocode-index="1" data-no-end="false" data-line-number-punc=":" data-line-number="true" data-comment-delimiter="▷">
 <div class="pseudocode">
 \begin{algorithm} \caption{Training (DDPM)} \begin{algorithmic} \Repeat\State $t\sim \text{Uniform}(\lbrace 1,\cdots,T \rbrace)$\Comment{ Sample random step}\State $x_0\sim q(x_0)$\Comment{ Sample random initial image}\State $\overline{\varepsilon}_t\sim \mathcal{N}(\mathbf{0},\mathbf{I})$\Comment{ Sample random noise}\State $x_t = \sqrt{\overline{\alpha}_t}x_0 + \sqrt{1-\overline{\alpha}_t}\cdot \overline{\varepsilon}_t$\State Take gradient descent step on $\Bigl\lVert \overline{\varepsilon}_t - \mathtt{Net}_{\theta}(x_t,t) \Bigr\rVert^2$\Comment{ Optimization}\Until{ converged} \end{algorithmic} \end{algorithm}
 </div>
@@ -458,7 +458,7 @@ def q_sample(self, x_start, t, noise=None):
 \end{aligned}
 </span></p>
 <p>Therefore, our sampling algorithm is as follows:</p>
-<div id="alg-diffusion-model-sampling-shortly" class="pseudocode-container" data-indent-size="1.2em" data-no-end="false" data-line-number-punc=":" data-alg-title="Algorithm" data-comment-delimiter="▷" data-line-number="true" data-pseudocode-index="2">
+<div id="alg-diffusion-model-sampling-shortly" class="pseudocode-container" data-indent-size="1.2em" data-alg-title="Algorithm" data-pseudocode-index="2" data-no-end="false" data-line-number-punc=":" data-line-number="true" data-comment-delimiter="▷">
 <div class="pseudocode">
 \begin{algorithm} \caption{Sampling (DDPM)} \begin{algorithmic} \State $x_T\sim \mathcal{N}(\mathbf{0},\mathbf{I})$\For{ $t=T,\cdots,1$}\If{ $t&gt;1$}\State $z \sim \mathcal{N}(\mathbf{0},\mathbf{I})$\Else\State $z= \mathbf{0}$\EndIf\State $x_{t-1}=\frac{1}{\sqrt{\alpha_t}}\Big(x_t-\frac{1-\alpha_t}{\sqrt{1-\overline{\alpha}_t}}\mathtt{Net}_{\theta}(x_t,t)\Big)+\sigma_t z$\EndFor\Return $x_0$ \end{algorithmic} \end{algorithm}
 </div>

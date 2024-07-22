@@ -9,6 +9,21 @@
       "language": "quarto",
       "scheme": "file",
       "pattern": "Note/Note.qmd"
+    },
+    {
+      "language": "quarto",
+      "scheme": "file",
+      "pattern": "_Appendix.qmd"
+    },
+    {
+      "language": "quarto",
+      "scheme": "file",
+      "pattern": "_Experiments-Conclusion.qmd"
+    },
+    {
+      "language": "quarto",
+      "scheme": "file",
+      "pattern": "index.qmd"
     }
   ]
 }
